@@ -1,0 +1,18 @@
+[package]
+name = "rs_processor_app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rs_commons={path="../rs-commons"}
+rs_processor_engine={path="../rs-processor-engine"}
+
+actix-web = "4.3.0"
+chrono = { version = "0.4.23", features=["serde"]}
+
+log = "0.4.17"
+derive_more = "0.99.17"
+env_logger = "0.10"
+futures-util = { version = "0.3.17", default-features = false, features = ["std"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

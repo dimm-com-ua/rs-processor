@@ -1,1 +1,17 @@
-GET http://localhost:8080/health-check
+GET {{host}}/app/v1/health-check
+
+###
+
+GET {{host}}/app/v1/to-do
+
+###
+
+POST {{host}}/app/v1/task/create
+Content-Type: application/json
+
+{
+  "flow": "test",
+  "arguments": {
+    "product": "check_plus"
+  }
+}

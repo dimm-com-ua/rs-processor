@@ -2,10 +2,15 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
-    pub mongodb_url: String,
-    pub mongodb_username: String,
-    pub mongodb_password: String,
-    pub mongodb_database: String
+    pub pg_url: String,
+    pub pg_port: String,
+    pub pg_username: String,
+    pub pg_password: String,
+    pub pg_database: String,
+    pub pg_database_use_tls: bool,
+
+    pub app_port: u16,
+    pub app_host: String
 }
 
 impl Config {

@@ -1,24 +1,34 @@
+use rs_commons::adapters::db::client::PgClient;
+use rs_commons::adapters::db::config::DbConfiguration;
+use rs_commons::adapters::db::db_migrations::run_migrations;
 use rs_commons::config::config::Config;
-use rs_commons::db::client::{DbError, MongoDbClient};
-use rs_commons::db::config::DbConfig;
+use rs_commons::db::services::{App, DbServices};
+use rs_processor_engine::services::EngineServices;
 
+#[derive(Clone)]
 pub struct AppService {
-    pub db_client: MongoDbClient
+    pub db_client: PgClient,
+    pub db_service: DbServices,
+    pub engine_service: EngineServices,
+    pub app: App
 }
 
 #[derive(Debug)]
 pub enum AppServiceError {
-    ErrorDbInitialization(String)
+    ErrorDbInitialization(String),
 }
 
 impl AppService {
-    pub async fn new(app_config: Config) -> Result<Self, AppServiceError> {
-        let db_client= MongoDbClient::new(app_config.get_db_config()).await.map_err(|err| {
-            AppServiceError::ErrorDbInitialization(format!("{:?}", err))
-        }).unwrap();
-
+    pub async fn new(app_config: &Config) -> Result<Self, AppServiceError> {
         Ok(AppService {
-            db_client
+            db_client: PgClient::new(app_config.get_db_config()),
+            db_service: DbServices::new(),
+            engine_service: EngineServices::new(),
+            app: App::new()
         })
+    }
+
+    pub async fn prepare(&self) {
+        run_migrations(&self.db_client).await;
     }
 }
