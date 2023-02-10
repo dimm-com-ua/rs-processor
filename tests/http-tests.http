@@ -12,6 +12,10 @@ Content-Type: application/json
 {
   "flow": "test",
   "arguments": {
-    "product": "check_plus"
+    "product": "cache",
+    "itn": "3000000000",
+    "phone": "380505555555",
+    "value": 12345,
+    "length": 12
   }
 }
