@@ -75,7 +75,7 @@ impl FlowElement {
 
                 if agrs_not_found.len() > 0 {
                     return Err(ErrorDefinition::with_reason(
-                        "Couldn't start process. One or more required field(s) was not passed".to_string(),
+                        "Couldn't start the process. One or more required field(s) was not passed".to_string(),
                         json!({"fields": agrs_not_found.iter().map(|x| x.name.clone()).collect::<Vec<String>>()})
                     ))
                 }
@@ -85,7 +85,7 @@ impl FlowElement {
 
                 if args_not_recognized.len() > 0 {
                     return Err(ErrorDefinition::with_reason(
-                        "Couldn't start process. One or more fields couldn't be recognized".to_string(),
+                        "Couldn't start the process. One or more fields couldn't be recognized".to_string(),
                         json!({"fields": args_not_recognized})
                     ))
                 }
@@ -95,7 +95,7 @@ impl FlowElement {
                 }).collect();
                 if args_with_incorrect_handler.len() > 0 {
                     return Err(ErrorDefinition::with_reason(
-                        "Couldn't start process. Can't find handler for or more fields that been passed".to_string(),
+                        "Couldn't start the process. One or more fields have datatype with a handler that is not found".to_string(),
                         json!({"fields": args_with_incorrect_handler.iter().map(|x| x.name.clone()).collect::<Vec<String>>()})
                     ))
                 }
