@@ -75,20 +75,31 @@ impl FlowElement {
 
                 if agrs_not_found.len() > 0 {
                     return Err(ErrorDefinition::with_reason(
-                        "One or more required field(s) was not passed".to_string(),
+                        "Couldn't start process. One or more required field(s) was not passed".to_string(),
                         json!({"fields": agrs_not_found.iter().map(|x| x.name.clone()).collect::<Vec<String>>()})
                     ))
                 }
+                let args_not_recognized: Vec<String> = args_to_process.unwrap().into_keys().filter(|x| {
+                    args.iter().filter(|a| a.name == x.clone()).count() == 0
+                }).collect();
 
-                for a in args {
+                if args_not_recognized.len() > 0 {
+                    return Err(ErrorDefinition::with_reason(
+                        "Couldn't start process. One or more fields couldn't be recognized".to_string(),
+                        json!({"fields": args_not_recognized})
+                    ))
+                }
 
-                    match app.dt(a.data_type.id.clone()) {
-                        None => { info!("Handler for {:?} not found", a.name.clone()) }
-                        Some(_dt) => {
-                            info!("Found handler for: {:?}", a.name.clone());
-                        }
-                    }
-                };
+                let args_with_incorrect_handler: Vec<&FlowElementArgument> = args.iter().filter(|a| {
+                    app.dt(a.data_type.id.clone()).is_none()
+                }).collect();
+                if args_with_incorrect_handler.len() > 0 {
+                    return Err(ErrorDefinition::with_reason(
+                        "Couldn't start process. Can't find handler for or more fields that been passed".to_string(),
+                        json!({"fields": args_with_incorrect_handler.iter().map(|x| x.name.clone()).collect::<Vec<String>>()})
+                    ))
+                }
+
                 Ok(())
             }
             Err(_) => {
