@@ -2,16 +2,13 @@ GET {{host}}/app/v1/health-check
 
 ###
 
-GET {{host}}/app/v1/to-do
-
-###
-
 POST {{host}}/app/v1/task/create
 Content-Type: application/json
 
 {
   "flow": "test",
   "arguments": {
+    "order_id": "000001",
     "product": "cache",
     "itn": "3000000000",
     "phone": "380505555555",

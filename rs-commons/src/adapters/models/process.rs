@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-use std::fmt::format;
-use std::sync::Arc;
 use deadpool_postgres::Transaction;
 use log::info;
 use serde_json::{json, Value};
-use crate::adapters::data_types::DataTypeTrait;
+use crate::adapters::models::common_error::ErrorDefinition;
 use crate::adapters::models::data_type::DataType;
 use crate::adapters::models::handlers::HandlerType;
 use crate::db::models::data_type_db::DataTypeDb;
@@ -51,25 +49,22 @@ impl FlowElementArgument {
     }
 }
 
-#[derive(Debug)]
-pub enum ProcessError { NotFound, GeneralError(String, Value) }
-
 impl FlowElement {
-    pub async fn get_all_arguments(&self, dbs: &DbServices, tr: &Transaction<'_>) -> Result<Vec<FlowElementArgument>, ProcessError> {
+    pub async fn get_all_arguments(&self, dbs: &DbServices, tr: &Transaction<'_>) -> Result<Vec<FlowElementArgument>, ErrorDefinition> {
         match dbs.flow.get_flow_item_arguments(self.id, &tr).await {
             Ok(args) => {
                 Ok(args)
             }
             Err(err) => {
-                Err(ProcessError::GeneralError(format!("{:?}", err), json!({})))
+                Err(ErrorDefinition::from_db(&err))
             }
         }
     }
 
-    pub async fn process(&self, args_to_process: Option<HashMap<String, Value>>, dbs: &DbServices, tr: &Transaction<'_>, app: &App) -> Result<(), ProcessError> {
+    pub async fn process(&self, args_to_process: Option<HashMap<String, Value>>, dbs: &DbServices, tr: &Transaction<'_>, app: &App) -> Result<(), ErrorDefinition> {
         match self.get_all_arguments(dbs, &tr).await {
             Ok(args) => {
-                let mut agrs_not_found: Vec<&FlowElementArgument> = args.iter().filter(|a| {
+                let agrs_not_found: Vec<&FlowElementArgument> = args.iter().filter(|a| {
                     if a.is_required {
                         return if let Some(arg) = &args_to_process {
                             !arg.contains_key(a.name.as_str())
@@ -79,15 +74,17 @@ impl FlowElement {
                 }).collect();
 
                 if agrs_not_found.len() > 0 {
-                    return Err(ProcessError::GeneralError("Args that are not found".to_string(),
-                                                          json!({"arguments": agrs_not_found.iter().map(|x| x.name.clone()).collect::<Vec<String>>()})))
+                    return Err(ErrorDefinition::with_reason(
+                        "One or more required field(s) was not passed".to_string(),
+                        json!({"fields": agrs_not_found.iter().map(|x| x.name.clone()).collect::<Vec<String>>()})
+                    ))
                 }
 
                 for a in args {
 
                     match app.dt(a.data_type.id.clone()) {
                         None => { info!("Handler for {:?} not found", a.name.clone()) }
-                        Some(dt) => {
+                        Some(_dt) => {
                             info!("Found handler for: {:?}", a.name.clone());
                         }
                     }
@@ -95,7 +92,7 @@ impl FlowElement {
                 Ok(())
             }
             Err(_) => {
-                Err(ProcessError::NotFound)
+                Err(ErrorDefinition::empty("Not found".to_string()))
             }
         }
     }

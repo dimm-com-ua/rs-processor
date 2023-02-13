@@ -9,7 +9,7 @@ impl StringDataType {
 }
 
 impl DataTypeTrait for StringDataType {
-    fn validate(&self, value: Value) -> Result<(), ()> {
+    fn validate(&self, _value: Value) -> Result<(), ()> {
         Ok(())
     }
 }

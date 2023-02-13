@@ -1,8 +1,6 @@
 use actix_web::{HttpResponse, web, post};
-use serde_json::json;
-use rs_commons::adapters::models::task::{CreateTask, TaskDefinition};
-use rs_processor_engine::services::task_engine_service::TaskEngineError;
-use crate::api::models::errors::ProcessorError;
+use rs_commons::adapters::models::task::{CreateTask};
+use crate::api::models::errors::{ProcessorError};
 use crate::api::tasks_api::modules::CreateTaskRequest;
 use crate::AppService;
 
@@ -30,7 +28,7 @@ async fn create_task(task: web::Json<CreateTaskRequest>, app: web::Data<AppServi
             Ok(HttpResponse::Ok().json(task))
         }
         Err(err) => {
-            Err(ProcessorError::InternalError(format!("{:?}", err)))
+            Err(ProcessorError::InternalError(err))
         }
     }
 }

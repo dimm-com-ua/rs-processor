@@ -1,5 +1,5 @@
 use rs_commons::adapters::db::client::PgClient;
-use rs_commons::adapters::models::process::ProcessError;
+use rs_commons::adapters::models::common_error::ErrorDefinition;
 use rs_commons::adapters::models::task::{CreateTask, TaskDefinition};
 use rs_commons::db::services::{App, DbServices};
 
@@ -13,8 +13,8 @@ pub enum FlowElementError {
 
 #[derive(Debug)]
 pub enum TaskEngineError {
-    DbServiceError(String),
-    NotFound(String),
+    DbServiceError(ErrorDefinition),
+    NotFound(ErrorDefinition),
     FlowDoesNotContainsStartingElement,
     FlowElementError(FlowElementError)
 }
@@ -22,7 +22,7 @@ pub enum TaskEngineError {
 impl TaskEngineService {
     pub fn new() -> Self { TaskEngineService{} }
 
-    pub async fn create_task(&self, task: CreateTask, dbs: &DbServices, db_client: &PgClient, app: &App) -> Result<TaskDefinition, TaskEngineError> {
+    pub async fn create_task(&self, task: CreateTask, dbs: &DbServices, db_client: &PgClient, app: &App) -> Result<TaskDefinition, ErrorDefinition> {
         match db_client.get_connection().await
             .build_transaction().start().await {
             Ok(tr) => {
@@ -34,7 +34,7 @@ impl TaskEngineService {
                                 match starting_element.process(task.arguments, dbs, &tr, &app).await {
                                     Ok(_) => {}
                                     Err(err) => {
-                                        return Err(TaskEngineError::DbServiceError(format!("{:?}", err)))
+                                        return Err(err)
                                     }
                                 }
 
@@ -46,16 +46,18 @@ impl TaskEngineService {
                                 Ok(TaskDefinition{})
                             }
                             Err(err) => {
-                                Err(TaskEngineError::DbServiceError(format!("{:?}", err)))
+                                Err(ErrorDefinition::from_db(&err))
                             }
                         }
                     }
                     Err(err) => {
-                        Err(TaskEngineError::NotFound(format!("Flow not found: {:?}", err)))
+                        Err(ErrorDefinition::from_db(&err))
                     }
                 }
             }
-            Err(err) => { Err(TaskEngineError::DbServiceError(err.to_string())) }
+            Err(err) => {
+                Err(ErrorDefinition::empty(format!("{:?}", err)))
+            }
         }
     }
 }

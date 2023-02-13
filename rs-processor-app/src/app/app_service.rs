@@ -1,6 +1,7 @@
 use rs_commons::adapters::db::client::PgClient;
 use rs_commons::adapters::db::config::DbConfiguration;
 use rs_commons::adapters::db::db_migrations::run_migrations;
+use rs_commons::adapters::models::common_error::ErrorDefinition;
 use rs_commons::config::config::Config;
 use rs_commons::db::services::{App, DbServices};
 use rs_processor_engine::services::EngineServices;
@@ -13,13 +14,8 @@ pub struct AppService {
     pub app: App
 }
 
-#[derive(Debug)]
-pub enum AppServiceError {
-    ErrorDbInitialization(String),
-}
-
 impl AppService {
-    pub async fn new(app_config: &Config) -> Result<Self, AppServiceError> {
+    pub async fn new(app_config: &Config) -> Result<Self, ErrorDefinition> {
         Ok(AppService {
             db_client: PgClient::new(app_config.get_db_config()),
             db_service: DbServices::new(),
