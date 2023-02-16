@@ -1,5 +1,5 @@
 use deadpool_postgres::Transaction;
-use crate::adapters::models::process::{FlowElement, ProcessFlow};
+use crate::adapters::models::process::{flow_element::FlowElement, process_flow::ProcessFlow};
 use crate::db::repos::process_repo::ProcessRepo;
 use crate::db::services::{DbServiceError};
 
@@ -7,6 +7,7 @@ use crate::db::services::{DbServiceError};
 pub struct ProcessDbService {
     repo: ProcessRepo
 }
+
 
 impl ProcessDbService {
     pub fn new() -> Self {
@@ -24,6 +25,15 @@ impl ProcessDbService {
 
     pub async fn find_starting_element(&self, flow_id: uuid::Uuid, tr: &Transaction<'_>) -> Result<FlowElement, DbServiceError> {
         match self.repo.find_starting_element(flow_id, tr).await {
+            Ok(flow_element) => Ok(flow_element),
+            Err(err) => {
+                Err(DbServiceError::QueryError(format!("{:?}", err)))
+            }
+        }
+    }
+
+    pub async fn get_flow_element(&self, element_id: uuid::Uuid, tr: &Transaction<'_>) -> Result<FlowElement, DbServiceError> {
+        match self.repo.get_flow_element(element_id, tr).await {
             Ok(flow_element) => Ok(flow_element),
             Err(err) => {
                 Err(DbServiceError::QueryError(format!("{:?}", err)))

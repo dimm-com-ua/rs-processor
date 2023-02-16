@@ -1,7 +1,7 @@
 use crate::db::models::handlers_db::HandlerTypeDb;
 
 pub struct HandlerType {
-    name: String
+    pub name: String
 }
 
 impl HandlerType {

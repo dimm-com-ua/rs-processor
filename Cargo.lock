@@ -83,9 +83,9 @@ dependencies = [
 
 [[package]]
 name = "actix-rt"
-version = "2.7.0"
+version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ea16c295198e958ef31930a6ef37d0fb64e9ca3b6116e6b93a8bdae96ee1000"
+checksum = "15265b6b8e2347670eb363c47fc8c75208b4a4994b27192f345fcbe707804f3e"
 dependencies = [
  "futures-core",
  "tokio",
@@ -1361,6 +1361,7 @@ checksum = "4389f1d5789befaf6029ebd9f7dac4af7f7e3d61b69d4f30e2ac02b57e7712b0"
 name = "rs_commons"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "chrono",
  "deadpool-postgres",
  "derive_more",
@@ -1391,14 +1392,17 @@ dependencies = [
  "rs_processor_engine",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
 name = "rs_processor_engine"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "log",
  "rs_commons",
+ "serde_json",
 ]
 
 [[package]]
@@ -1673,9 +1677,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.23.0"
+version = "1.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eab6d665857cc6ca78d6e80303a02cea7a7851e85dfbd77cbdc09bd129f1ef46"
+checksum = "c8e00990ebabbe4c14c08aca901caed183ecd5c09562a12c824bb53d3c3fd3af"
 dependencies = [
  "autocfg",
  "bytes",

@@ -9,7 +9,11 @@ impl StringDataType {
 }
 
 impl DataTypeTrait for StringDataType {
-    fn validate(&self, _value: Value) -> Result<(), ()> {
-        Ok(())
+    fn validate(&self, value: &Value) -> Result<(), ()> {
+        if value.is_string() {
+            Ok(())
+        } else {
+            Err(())
+        }
     }
 }

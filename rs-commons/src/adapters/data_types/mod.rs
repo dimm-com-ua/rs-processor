@@ -1,10 +1,12 @@
 use std::collections::{HashMap};
 use std::sync::Arc;
 use serde_json::Value;
+use crate::adapters::data_types::number::NumberDataType;
+use crate::adapters::data_types::object::ObjectDataType;
 use crate::adapters::data_types::string::StringDataType;
 
 pub trait DataTypeTrait {
-    fn validate(&self, value: Value) -> Result<(), ()>;
+    fn validate(&self, value: &Value) -> Result<(), ()>;
 }
 
 pub mod string;
@@ -24,6 +26,8 @@ impl DataTypes {
     pub fn init(&mut self) {
         self.h = HashMap::new();
         self.h.insert("string".to_string(), Arc::new(StringDataType::new()));
+        self.h.insert("number".to_string(), Arc::new(NumberDataType::new()));
+        self.h.insert("object".to_string(), Arc::new(ObjectDataType::new()));
     }
 
     pub fn get(&self, name: String) -> Option<&Arc<(dyn DataTypeTrait + Sync + Send)>> {

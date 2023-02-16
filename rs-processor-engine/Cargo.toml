@@ -9,3 +9,7 @@ edition = "2021"
 rs_commons={path="../rs-commons"}
 
 log = "0.4.17"
+
+serde_json = "1.0.92"
+
+chrono = "0.4.23"

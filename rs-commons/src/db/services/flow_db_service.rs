@@ -1,5 +1,5 @@
 use deadpool_postgres::Transaction;
-use crate::adapters::models::process::FlowElementArgument;
+use crate::adapters::models::process::flow_element::FlowElementArgument;
 use crate::db::repos::flow_repo::FlowRepo;
 use crate::db::services::DbServiceError;
 

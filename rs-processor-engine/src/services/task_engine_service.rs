@@ -2,6 +2,8 @@ use rs_commons::adapters::db::client::PgClient;
 use rs_commons::adapters::models::common_error::ErrorDefinition;
 use rs_commons::adapters::models::task::{CreateTask, TaskDefinition};
 use rs_commons::db::services::{App, DbServices};
+use chrono::Utc;
+use serde_json::{json};
 
 #[derive(Clone)]
 pub struct TaskEngineService;
@@ -28,22 +30,28 @@ impl TaskEngineService {
             Ok(tr) => {
                 match dbs.process.find_process_flow(task.flow, &tr).await {
                     Ok(flow) => {
-                        log::info!("{:?}", flow);
                         match dbs.process.find_starting_element(flow.id, &tr).await {
                             Ok(starting_element) => {
-                                match starting_element.process(task.arguments, dbs, &tr, &app).await {
-                                    Ok(_) => {}
+                                if let Err(err) = starting_element.validate(task.arguments.clone(), dbs, &tr, &app).await {
+                                    return Err(err)
+                                }
+                                match flow.run_task(&starting_element, task.arguments, dbs, &tr, &app).await {
+                                    Ok(task) => {
+                                        let now = Utc::now();
+                                        if let Err(err) = dbs.tasks.create_worker(task.id,  starting_element.id.clone(),Some(now), &tr).await {
+                                            return Err(ErrorDefinition::with_reason("Error creating worker".to_string(), json!({"error": format!("{:?}", err)})))
+                                        }
+
+                                        if let Err(err) = tr.commit().await {
+                                            Err(ErrorDefinition::with_reason("Error committing transaction".to_string(), json!({"error": format!("{:?}", err)})))
+                                        } else {
+                                            Ok(task)
+                                        }
+                                    }
                                     Err(err) => {
-                                        return Err(err)
+                                        Err(err)
                                     }
                                 }
-
-                                if let Ok(args) = starting_element.get_all_arguments(dbs, &tr).await {
-                                    log::info!("args: {:?}", args);
-                                } else {
-                                    log::info!("args not found");
-                                }
-                                Ok(TaskDefinition{})
                             }
                             Err(err) => {
                                 Err(ErrorDefinition::from_db(&err))
@@ -60,4 +68,5 @@ impl TaskEngineService {
             }
         }
     }
+
 }

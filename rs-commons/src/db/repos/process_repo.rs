@@ -1,6 +1,7 @@
 use deadpool_postgres::Transaction;
+use postgres_types::ToSql;
 use crate::adapters::models::handlers::HandlerType;
-use crate::adapters::models::process::{FlowElement, ProcessFlow};
+use crate::adapters::models::process::{flow_element::FlowElement, process_flow::ProcessFlow};
 use crate::db::models::handlers_db::HandlerTypeDb;
 use crate::db::models::process_db::{FlowElementDb, ProcessDefinitionDb, ProcessDefinitionFlowDb};
 use crate::db::repos::DbRepoError;
@@ -46,7 +47,18 @@ impl ProcessRepo {
                                 left join pc_handler_type pht on pht.id = ppfe.handler_type
                                 where ppfe.process_flow=$1
                                 and ppfe.handler_type=(select pht.id from pc_handler_type pht where pht.name='starting');";
-        match tr.query(query, &[&flow_id]).await {
+        self.query_flow_element(&query, &[&flow_id], tr).await
+    }
+
+    pub async fn get_flow_element(&self, flow_element_id: uuid::Uuid, tr: &Transaction<'_>) -> Result<FlowElement, DbRepoError> {
+        let query = "select ppfe, pht from pc_process_flow_element ppfe
+                            left join pc_handler_type pht on pht.id = ppfe.handler_type
+                            where ppfe.id=$1";
+        self.query_flow_element(&query, &[&flow_element_id], tr).await
+    }
+
+    async fn query_flow_element(&self, query: &str, args: &[&(dyn ToSql + Sync)], tr: &Transaction<'_>) -> Result<FlowElement, DbRepoError> {
+        match tr.query(query, args).await {
             Ok(rows) => {
                 return if rows.len() > 0 {
                     if let Some(row) = rows.get(0) {
@@ -69,4 +81,6 @@ impl ProcessRepo {
             Err(err) => { Err(DbRepoError::QueryError(format!("Error fetching flow_item: {:?}", err))) }
         }
     }
+
+
 }
