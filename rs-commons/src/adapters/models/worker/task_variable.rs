@@ -7,3 +7,14 @@ pub struct TaskVariable {
     pub data_type: DataType,
     pub value: Value
 }
+
+impl TaskVariable {
+    pub fn new(name: String, dt: DataType, value: Value) -> Self {
+        TaskVariable {
+            id: Default::default(),
+            name,
+            data_type: dt,
+            value,
+        }
+    }
+}

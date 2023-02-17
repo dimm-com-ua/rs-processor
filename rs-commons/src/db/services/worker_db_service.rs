@@ -53,7 +53,7 @@ impl WorkerDbService {
                             };
                             let task_id = worker.task_id.clone();
                             let worker_id = worker.id.clone();
-                            match h.process(worker, dbs, args, &tr).await {
+                            match h.process(worker, dbs, app, args, &tr).await {
                                 Ok(task) => {
                                     match dbs.flow.get_flow_item_arguments(flow_element.id.clone(), &tr).await {
                                         Ok(args_to_save) => {

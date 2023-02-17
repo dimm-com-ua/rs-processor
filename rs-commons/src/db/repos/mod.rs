@@ -1,3 +1,4 @@
+pub mod core_repo;
 pub mod flow_repo;
 pub mod process_repo;
 pub mod task_repo;
