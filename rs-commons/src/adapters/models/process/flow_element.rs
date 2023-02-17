@@ -16,7 +16,7 @@ pub struct FlowElement {
     pub description: String
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ArgumentDirection { In, Out, Undefined }
 
 #[derive(Debug)]
@@ -54,9 +54,9 @@ impl FlowElement {
 
     pub async fn validate(&self, args_to_process: Option<HashMap<String, Value>>, dbs: &DbServices, tr: &Transaction<'_>, app: &App) -> Result<(), ErrorDefinition> {
         match self.get_all_arguments(dbs, &tr).await {
-            Ok(args) => {
+            Ok(args) => {;
                 let agrs_not_found: Vec<&FlowElementArgument> = args.iter().filter(|a| {
-                    if a.is_required {
+                    if a.direction == ArgumentDirection::In && a.is_required {
                         return if let Some(arg) = &args_to_process {
                             !arg.contains_key(a.name.as_str())
                         } else { true }
@@ -71,7 +71,7 @@ impl FlowElement {
                     ))
                 }
                 let args_not_recognized: Vec<String> = args_to_process.as_ref().unwrap().clone().into_keys().filter(|x| {
-                    args.iter().filter(|a| a.name == x.clone()).count() == 0
+                    args.iter().filter(|a| a.name == x.clone() && a.direction == ArgumentDirection::In).count() == 0
                 }).collect();
 
                 if args_not_recognized.len() > 0 {
@@ -93,8 +93,12 @@ impl FlowElement {
 
                 if let Some(args_to_process) = args_to_process {
                     let args_did_not_pass_validation: Vec<&FlowElementArgument> = args.iter().filter(|a| {
-                        let val = &args_to_process.get(a.name.clone().as_str()).unwrap();
-                        app.dt(a.data_type.id.clone()).unwrap().validate(val).is_err()
+                        if a.direction == ArgumentDirection::In {
+                            let val = &args_to_process.get(a.name.clone().as_str()).unwrap();
+                            app.dt(a.data_type.id.clone()).unwrap().validate(val).is_err()
+                        } else {
+                            false
+                        }
                     }).collect();
                     if args_did_not_pass_validation.len() > 0 {
                         return Err(ErrorDefinition::with_reason(

@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use deadpool_postgres::Transaction;
 use serde_json::json;
 use crate::adapters::db::client::PgClient;
 use crate::adapters::models::common_error::ErrorDefinition;
@@ -42,6 +43,14 @@ impl WorkerRepo {
         let query = "update pc_task_worker set locked_by=null, runner_key=null where locked_by<$1 or locked_by is null;";
         if let Err(err) = db.get_connection().await.query(query, &[&now]).await {
             return Err(ErrorDefinition::with_reason("Couldn't unlock workers".to_string(), json!({"error": format!("{:?}", err)})))
+        }
+        Ok(())
+    }
+
+    pub async fn delete(&self, worker_id: uuid::Uuid, tr: &Transaction<'_>) -> Result<(), ErrorDefinition> {
+        let query = "delete from pc_task_worker where id = $1;";
+        if let Err(err) = tr.query(query, &[&worker_id]).await {
+            return Err(ErrorDefinition::with_reason("Couldn't delete worker".to_string(), json!({"error": format!("{:?}", err)})))
         }
         Ok(())
     }

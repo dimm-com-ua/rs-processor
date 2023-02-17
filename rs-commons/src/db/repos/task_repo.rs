@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use deadpool_postgres::tokio_postgres::{Error, Row};
 use deadpool_postgres::Transaction;
+use log::info;
 use serde_json::{json, Value};
 use uuid::Uuid;
 use crate::adapters::models::common_error::ErrorDefinition;
@@ -67,6 +68,7 @@ impl TasksDbRepo {
         let query = "select ptv, pdt from pc_task_variable ptv
                                 left join pc_data_type pdt on pdt.id = ptv.data_type
                                 where task_id=$1 and flow_element_id=$2;";
+        info!("{:?} - {:?}", task_id, element_id);
         match tr.query(query, &[&task_id, &element_id]).await {
             Ok(rows) => {
                 let vars: Vec<TaskVariable> = rows.iter().map(|x| {
