@@ -50,9 +50,17 @@ impl FlowRepo {
             match task_variables.iter().find(|x| x.name == arg) {
                 None => {}
                 Some(var) => {
-                    let query = "insert into pc_task_variable (task_id, name, data_type, value, flow_element_id) values ($1, $2, $3, $4, null);";
-                    match tr.query(query, &[&task_id.clone(), &arg, &var.data_type.id.clone(), &var.value.clone()]).await {
-                        Ok(_) => {}
+                    let query = "update pc_task_variable set value=$1 where task_id=$2 and name=$3 returning id;";
+                    match tr.query(query, &[&var.value.clone(), &task_id.clone(), &arg]).await {
+                        Ok(rows) => {
+                            if rows.is_empty() {
+                                let query = "insert into pc_task_variable (task_id, name, data_type, value, flow_element_id) values ($1, $2, $3, $4, null);";
+                                match tr.query(query, &[&task_id.clone(), &arg, &var.data_type.id.clone(), &var.value.clone()]).await {
+                                    Ok(_) => {}
+                                    Err(err) => { args_with_error.push((var.name.clone(), format!("{:?}", err))) }
+                                }
+                            }
+                        }
                         Err(err) => { args_with_error.push((var.name.clone(), format!("{:?}", err))) }
                     }
                 }

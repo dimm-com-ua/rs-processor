@@ -30,8 +30,8 @@ impl TasksDbRepo {
                             }  else {
                                 "string".to_string()
                             };
-                            let query = "insert into pc_task_variable (task_id, name, data_type, value, flow_element_id) values ($1, $2, $3, $4, $5);";
-                            if let Err(err) = tr.query(query, &[&uuid, &arg, &data_type, value, &current_flow_id]).await {
+                            let query = "insert into pc_task_variable (task_id, name, data_type, value, flow_element_id) values ($1, $2, $3, $4, null);";
+                            if let Err(err) = tr.query(query, &[&uuid, &arg, &data_type, value]).await {
                                 return Err(ErrorDefinition::with_reason("Error inserting flow variable".to_string(), json!({"error": format!("{:?}", err)})))
                             }
                         }
@@ -67,9 +67,9 @@ impl TasksDbRepo {
     pub async fn get_task_variables(&self, task_id: Uuid, element_id: Option<Uuid>, tr: &Transaction<'_>) -> Result<Vec<TaskVariable>, ErrorDefinition> {
         let query = "select ptv, pdt from pc_task_variable ptv
                                 left join pc_data_type pdt on pdt.id = ptv.data_type
-                                where task_id=$1 and flow_element_id=$2;";
+                                where task_id=$1 and flow_element_id is null;";
         info!("{:?} - {:?}", task_id, element_id);
-        match tr.query(query, &[&task_id, &element_id]).await {
+        match tr.query(query, &[&task_id]).await {
             Ok(rows) => {
                 let vars: Vec<TaskVariable> = rows.iter().map(|x| {
                     let ptv: TaskVariableDb = x.get(0);

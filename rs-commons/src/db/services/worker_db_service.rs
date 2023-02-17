@@ -43,11 +43,13 @@ impl WorkerDbService {
                         if let Some(h) = app.handler(flow_element.handler_type.name.clone()) {
                             let args = match  dbs.tasks.get_task_variables(
                                 worker.task_id.clone(),
-                                Some(flow_element.id.clone()),
+                                None,
                                 &tr
                             ).await {
                                 Ok(args) => { Some(args)}
-                                Err(_) => { None }
+                                Err(err) => {
+                                    return Err(err);
+                                }
                             };
                             let task_id = worker.task_id.clone();
                             let worker_id = worker.id.clone();
