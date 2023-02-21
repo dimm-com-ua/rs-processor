@@ -1,9 +1,12 @@
+use deadpool_postgres::tokio_postgres::{Error, Row};
 use deadpool_postgres::Transaction;
 use postgres_types::ToSql;
+use crate::adapters::db::client::PgClient;
 use crate::adapters::models::handlers::HandlerType;
 use crate::adapters::models::process::{flow_element::FlowElement, process_flow::ProcessFlow};
+use crate::adapters::models::process::flow_route::FlowRoute;
 use crate::db::models::handlers_db::HandlerTypeDb;
-use crate::db::models::process_db::{FlowElementDb, ProcessDefinitionDb, ProcessDefinitionFlowDb};
+use crate::db::models::process_db::{FlowElementDb, FlowRouteDb, ProcessDefinitionDb, ProcessDefinitionFlowDb};
 use crate::db::repos::DbRepoError;
 
 #[derive(Clone)]
@@ -55,6 +58,40 @@ impl ProcessRepo {
                             left join pc_handler_type pht on pht.id = ppfe.handler_type
                             where ppfe.id=$1";
         self.query_flow_element(&query, &[&flow_element_id], tr).await
+    }
+
+    pub async fn get_out_routes(&self, flow_element_id: uuid::Uuid, tr: &Transaction<'_>) -> Result<Vec<FlowRoute>, DbRepoError> {
+        let query = "select ppfr, ppfo, pht from pc_process_flow_route ppfr
+                              left join pc_process_flow_element ppfo on ppfo.id = ppfr.to_element
+                                          left join pc_handler_type pht on pht.id = ppfo.handler_type
+                            where ppfr.from_element = $1
+                            order by ppfr.priority;";
+        self.query_flow_routes(&query, &[&flow_element_id], tr).await
+    }
+
+    async fn query_flow_routes(&self, query: &str, args: &[&(dyn ToSql + Sync)], tr: &Transaction<'_>) -> Result<Vec<FlowRoute>, DbRepoError> {
+        match tr.query(query, args).await {
+            Ok(rows) => {
+                let ret: Vec<FlowRoute> = rows.iter().map(|r| {
+                    let ppfr: FlowRouteDb = r.get(0);
+                    let ppfo: FlowElementDb = r.get(1);
+                    let pppht: HandlerTypeDb = r.get(2);
+                    FlowRoute {
+                        model: ppfr,
+                        out_flow_element: None,
+                        in_flow_element: Some(FlowElement {
+                            id: ppfo.id.clone(),
+                            el_type: ppfo.el_type.clone(),
+                            handler_type: HandlerType::from_db(pppht),
+                            handler_value: ppfo.handler_value.clone(),
+                            description: ppfo.description.unwrap_or("".to_string()),
+                        }),
+                    }
+                }).collect();
+                Ok(ret)
+            }
+            Err(err) => { Err(DbRepoError::QueryError(format!("Error fetching flow routes list: {:?}", err))) }
+        }
     }
 
     async fn query_flow_element(&self, query: &str, args: &[&(dyn ToSql + Sync)], tr: &Transaction<'_>) -> Result<FlowElement, DbRepoError> {

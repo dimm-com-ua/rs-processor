@@ -57,7 +57,7 @@ async fn prepare_schedule(app: Arc<AppService>) -> Result<(), String> {
     info!("Creating scheduler");
     let worker = WorkerService::new();
     let worker = Arc::new(worker);
-    let mut interval = time::interval(Duration::from_secs(5));
+    let mut interval = time::interval(Duration::from_millis(1));
 
     loop {
         interval.tick().await;

@@ -4,6 +4,7 @@ use rs_commons::adapters::models::task::{CreateTask, TaskDefinition};
 use rs_commons::db::services::{App, DbServices};
 use chrono::Utc;
 use serde_json::{json};
+use rs_commons::adapters::models::worker::task_worker::WorkerWhat;
 
 #[derive(Clone)]
 pub struct TaskEngineService;
@@ -38,7 +39,7 @@ impl TaskEngineService {
                                 match flow.run_task(&starting_element, task.arguments, dbs, &tr, &app).await {
                                     Ok(task) => {
                                         let now = Utc::now();
-                                        if let Err(err) = dbs.tasks.create_worker(task.id,  starting_element.id.clone(),Some(now), &tr).await {
+                                        if let Err(err) = dbs.tasks.create_worker(task.id,  starting_element.id.clone(),WorkerWhat::Process, Some(now), &tr).await {
                                             return Err(ErrorDefinition::with_reason("Error creating worker".to_string(), json!({"error": format!("{:?}", err)})))
                                         }
 

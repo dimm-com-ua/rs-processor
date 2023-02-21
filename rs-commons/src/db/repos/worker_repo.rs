@@ -1,8 +1,10 @@
 use chrono::{DateTime, Utc};
 use deadpool_postgres::Transaction;
 use serde_json::json;
+use uuid::uuid;
 use crate::adapters::db::client::PgClient;
 use crate::adapters::models::common_error::ErrorDefinition;
+use crate::db::models::process_db::FlowElementDb;
 use crate::db::models::task_worker_db::TaskWorkerDb;
 
 #[derive(Clone)]
@@ -18,7 +20,7 @@ impl WorkerRepo {
             return Err(err);
         }
         let query = "update pc_task_worker set runner_key=$1, locked_by=$2
-                            where id in (select ptw.id from pc_task_worker ptw where ptw.runner_key is null and ptw.locked_by is null and ptw.run_after<=$3 limit $4);";
+                            where id in (select ptw.id from pc_task_worker ptw where ptw.runner_key is null and ptw.locked_by is null and (ptw.run_after<=$3 or ptw.run_after is null) limit $4);";
 
         if let Err(err) = db.get_connection().await.query(query, &[&lock_key, &lock_by, &now, &count]).await {
             return Err(ErrorDefinition::with_reason("Couldn't lock workers".to_string(), json!({"error": format!("{:?}", err)})));

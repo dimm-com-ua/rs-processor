@@ -28,7 +28,7 @@ impl CoreRepo {
                 }
             }
             Err(err) => {
-                return Err(ErrorDefinition::with_reason("Error fetching data type".to_string(), json!({"error": format!("err")})))
+                return Err(ErrorDefinition::with_reason("Error fetching data type".to_string(), json!({"error": format!("{:?}", err)})))
             }
         }
     }

@@ -30,3 +30,19 @@ pub struct FlowElementDb {
     pub handler_value: Value,
     pub description: Option<String>
 }
+
+#[derive(Debug, ToSql, FromSql, PartialEq, Clone)]
+#[postgres(name="pc_process_flow_route")]
+pub struct FlowRouteDb {
+    pub id: uuid::Uuid,
+    #[postgres(name="process_flow")]
+    pub process_flow_id: uuid::Uuid,
+    pub is_conditional: Option<bool>,
+    pub condition: Option<Value>,
+    #[postgres(name="from_element")]
+    pub from_element_id: uuid::Uuid,
+    #[postgres(name="to_element")]
+    pub to_element_id: uuid::Uuid,
+    pub priority: Option<i32>,
+    pub description: Option<String>
+}

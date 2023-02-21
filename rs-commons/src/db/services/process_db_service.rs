@@ -1,5 +1,7 @@
 use deadpool_postgres::Transaction;
+use crate::adapters::db::client::PgClient;
 use crate::adapters::models::process::{flow_element::FlowElement, process_flow::ProcessFlow};
+use crate::adapters::models::process::flow_route::FlowRoute;
 use crate::db::repos::process_repo::ProcessRepo;
 use crate::db::services::{DbServiceError};
 
@@ -38,6 +40,13 @@ impl ProcessDbService {
             Err(err) => {
                 Err(DbServiceError::QueryError(format!("{:?}", err)))
             }
+        }
+    }
+
+    pub async fn get_out_routes(&self, element_id: uuid::Uuid, tr: &Transaction<'_>) -> Result<Vec<FlowRoute>, DbServiceError> {
+        match self.repo.get_out_routes(element_id, tr).await {
+            Ok(routes) => Ok(routes),
+            Err(err) => Err(DbServiceError::QueryError(format!("{:?}", err)))
         }
     }
 }

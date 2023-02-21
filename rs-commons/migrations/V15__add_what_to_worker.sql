@@ -1,0 +1,1 @@
+alter table pc_task_worker add column what varchar(20) not null default 'process';

@@ -8,6 +8,7 @@ use crate::db::models::data_type_db::DataTypeDb;
 use crate::db::models::flow_db::FlowElementArgumentDb;
 use crate::db::services::{App, DbServices};
 
+#[derive(Debug)]
 pub struct FlowElement {
     pub id: uuid::Uuid,
     pub el_type: String,

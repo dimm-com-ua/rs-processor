@@ -6,11 +6,13 @@ use crate::adapters::models::common_error::ErrorDefinition;
 use crate::adapters::models::worker::task_variable::TaskVariable;
 use crate::adapters::models::worker::task_worker::TaskWorker;
 use crate::adapters::models::worker::task_worker_result::TaskWorkerResult;
+use crate::adapters::task_handlers::finish::FinishHandler;
 use crate::adapters::task_handlers::simple::SimpleHandler;
 use crate::db::services::{App, DbServices};
 
 pub mod simple;
 pub mod starting;
+pub mod finish;
 
 #[async_trait]
 pub trait TaskHandlerTrait {
@@ -30,7 +32,10 @@ impl TaskHandlers {
     pub fn init(&mut self) {
         self.h = HashMap::new();
         self.h.insert("starting".to_string(), Arc::new(SimpleHandler::new()));
-        self.h.insert("finish".to_string(), Arc::new(SimpleHandler::new()));
+        self.h.insert("continue".to_string(), Arc::new(SimpleHandler::new()));
+        self.h.insert("match".to_string(), Arc::new(SimpleHandler::new()));
+        self.h.insert("finish".to_string(), Arc::new(FinishHandler::new()));
+        self.h.insert("on_error".to_string(), Arc::new(SimpleHandler::new()));
     }
 
     pub fn get(&self, name: String) -> Option<&Arc<(dyn TaskHandlerTrait + Sync + Send)>> {

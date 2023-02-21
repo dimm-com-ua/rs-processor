@@ -1,5 +1,6 @@
 use crate::db::models::handlers_db::HandlerTypeDb;
 
+#[derive(Debug)]
 pub struct HandlerType {
     pub name: String
 }

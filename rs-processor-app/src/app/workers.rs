@@ -1,7 +1,7 @@
 use std::sync::Arc;
-use log::error;
+use log::{error, info};
 use rs_commons::adapters::models::common_error::ErrorDefinition;
-use rs_commons::adapters::models::worker::task_worker::TaskWorker;
+use rs_commons::adapters::models::worker::task_worker::{TaskWorker, WorkerWhat};
 use rs_commons::db::services::worker_db_service::WorkerDbService;
 use crate::app::app_service::AppService;
 
@@ -24,11 +24,23 @@ impl WorkerService {
                     let db_client = app.db_client.clone();
                     let dbs = app.db_service.clone();
                     let db_service = self.db_service.clone();
-                    tokio::spawn(async move {
-                        if let Err(err) = db_service.process(TaskWorker::from_db(w), &db_client, &dbs, &app.app).await {
-                            error!("{:?}", err);
+
+                    info!("Processing {} - {} - {}", w.task_id, w.element_id, w.what);
+
+                    match w.what {
+                        WorkerWhat::Process  => {
+                            tokio::spawn(async move {
+                                if let Err(err) = db_service.process(w, &db_client, &dbs, &app.app).await {
+                                    error!("{:?}", err);
+                                }
+                            });
+                        },
+                        WorkerWhat::RouteAfter => {
+                            if let Err(err) = db_service.route_after(w, &db_client, &dbs, &app.app).await {
+                                error!("{:?}", err);
+                            }
                         }
-                    });
+                    }
                 }
                 Ok(())
             }

@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use crate::adapters::models::worker::task_variable::TaskVariable;
 
-pub enum WorkerResult { Done, Fail }
+pub enum WorkerResult { Done, Fail, Finishing }
 
 pub struct TaskWorkerResult {
     pub result: WorkerResult,
@@ -23,6 +23,14 @@ impl TaskWorkerResult {
             result: WorkerResult::Done,
             wait_until: None,
             out_args: args,
+        }
+    }
+
+    pub fn finish() -> Self {
+        TaskWorkerResult {
+            result: WorkerResult::Finishing,
+            wait_until: None,
+            out_args: vec![],
         }
     }
 }

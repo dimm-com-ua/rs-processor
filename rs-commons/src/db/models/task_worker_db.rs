@@ -10,5 +10,6 @@ pub struct TaskWorkerDb {
     pub created_at: DateTime<Utc>,
     pub run_after: DateTime<Utc>,
     pub runner_key: Option<uuid::Uuid>,
-    pub locked_by: Option<DateTime<Utc>>
+    pub locked_by: Option<DateTime<Utc>>,
+    pub what: Option<String>
 }

@@ -8,7 +8,7 @@ pub struct TaskDb {
     pub id: uuid::Uuid,
     pub process_flow: uuid::Uuid,
     pub created_at: DateTime<Utc>,
-    pub current_flow_item: Option<uuid::Uuid>
+    pub current_flow_element: Option<uuid::Uuid>
 }
 
 #[derive(Clone, Debug, FromSql, ToSql)]
