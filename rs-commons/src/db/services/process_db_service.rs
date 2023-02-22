@@ -1,5 +1,4 @@
 use deadpool_postgres::Transaction;
-use crate::adapters::db::client::PgClient;
 use crate::adapters::models::process::{flow_element::FlowElement, process_flow::ProcessFlow};
 use crate::adapters::models::process::flow_route::FlowRoute;
 use crate::db::repos::process_repo::ProcessRepo;

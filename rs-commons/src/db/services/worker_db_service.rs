@@ -1,20 +1,14 @@
 use chrono::{Duration, Utc};
-use deadpool_postgres::tokio_postgres::Error;
-use deadpool_postgres::Transaction;
 use log::info;
 use serde_json::json;
+
 use crate::adapters::db::client::PgClient;
 use crate::adapters::models::common_error::ErrorDefinition;
-use crate::adapters::models::process::flow_element::{ArgumentDirection, FlowElementArgument};
-use crate::adapters::models::worker::task_variable::TaskVariable;
+use crate::adapters::models::process::flow_element::{ArgumentDirection};
 use crate::adapters::models::worker::task_worker::{TaskWorker, WorkerWhat};
 use crate::adapters::models::worker::task_worker_result::WorkerResult;
-use crate::db::models::data_type_db::DataTypeDb;
-use crate::db::models::flow_db::FlowElementArgumentDb;
-use crate::db::models::task_db::TaskVariableDb;
-use crate::db::models::task_worker_db::TaskWorkerDb;
 use crate::db::repos::worker_repo::WorkerRepo;
-use crate::db::services::{App, DbServiceError, DbServices};
+use crate::db::services::{App, DbServices};
 
 #[derive(Clone)]
 pub struct WorkerDbService {
@@ -83,7 +77,7 @@ impl WorkerDbService {
                                                             task.out_args,
                                                             &tr
                                                         ).await {
-                                                            Ok(res) => {}
+                                                            Ok(_res) => {}
                                                             Err(err) => {
                                                                 return Err(ErrorDefinition::with_reason("Couldn't save process task result".to_string(), json!({"error": format!("{:?}", err)})))
                                                             }
@@ -127,7 +121,7 @@ impl WorkerDbService {
         }
     }
 
-    pub async fn route_after(&self, worker: TaskWorker, db_client: &PgClient, dbs: &DbServices, app: &App) -> Result<(), ErrorDefinition> {
+    pub async fn route_after(&self, worker: TaskWorker, db_client: &PgClient, dbs: &DbServices, _app: &App) -> Result<(), ErrorDefinition> {
         match db_client.get_connection().await.build_transaction().start().await {
             Ok(tr) => {
                 match dbs.process.get_out_routes(
@@ -136,7 +130,7 @@ impl WorkerDbService {
                 ).await {
                     Ok(routes) => {
                         if let Some(route) = routes.first() {
-                            if let Some(is_conditional) = route.model.is_conditional {
+                            if let Some(_is_conditional) = route.model.is_conditional {
                                 match dbs.tasks.create_worker(
                                     worker.task_id.clone(),
                                     route.in_flow_element.as_ref().unwrap().id.clone(),

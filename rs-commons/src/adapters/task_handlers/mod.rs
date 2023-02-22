@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use deadpool_postgres::Transaction;
+
 use async_trait::async_trait;
+use deadpool_postgres::Transaction;
+
 use crate::adapters::models::common_error::ErrorDefinition;
 use crate::adapters::models::worker::task_variable::TaskVariable;
 use crate::adapters::models::worker::task_worker::TaskWorker;
@@ -10,13 +12,17 @@ use crate::adapters::task_handlers::finish::FinishHandler;
 use crate::adapters::task_handlers::simple::SimpleHandler;
 use crate::db::services::{App, DbServices};
 
-pub mod simple;
-pub mod starting;
-pub mod finish;
+#[macro_use]
+pub mod macro_mod;
+
+mod simple;
+mod starting;
+mod finish;
+mod test_handler;
 
 #[async_trait]
 pub trait TaskHandlerTrait {
-    async fn process(&self, _task_worker: TaskWorker, _dbs: &DbServices, app: &App, args: Option<Vec<TaskVariable>>, _tr: &Transaction<'_>) -> Result<TaskWorkerResult, ErrorDefinition> {
+    async fn process(&self, _task_worker: TaskWorker, _dbs: &DbServices, _ыapp: &App, args: Option<Vec<TaskVariable>>, _tr: &Transaction<'_>) -> Result<TaskWorkerResult, ErrorDefinition> {
         Ok(TaskWorkerResult::ok_with_args(args.unwrap_or(vec!())))
     }
 }

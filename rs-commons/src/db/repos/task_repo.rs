@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use chrono::{DateTime, Utc};
-use deadpool_postgres::tokio_postgres::{Error, Row};
 use deadpool_postgres::Transaction;
-use log::info;
 use serde_json::{json, Value};
 use uuid::Uuid;
 use crate::adapters::models::common_error::ErrorDefinition;
@@ -75,7 +73,7 @@ impl TasksDbRepo {
         }
     }
 
-    pub async fn get_task_variables(&self, task_id: Uuid, element_id: Option<Uuid>, tr: &Transaction<'_>) -> Result<Vec<TaskVariable>, ErrorDefinition> {
+    pub async fn get_task_variables(&self, task_id: Uuid, _element_id: Option<Uuid>, tr: &Transaction<'_>) -> Result<Vec<TaskVariable>, ErrorDefinition> {
         let query = "select ptv, pdt from pc_task_variable ptv
                                 left join pc_data_type pdt on pdt.id = ptv.data_type
                                 where task_id=$1 and flow_element_id is null;";

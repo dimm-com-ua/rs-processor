@@ -7,8 +7,8 @@ pub enum ProcessorError {
     NotFound,
     DbError(ErrorDefinition),
     InternalError(ErrorDefinition),
-    ExternalError(ErrorDefinition),
-    BadData(ErrorDefinition)
+    _ExternalError(ErrorDefinition),
+    _BadData(ErrorDefinition)
 }
 
 impl ResponseError for ProcessorError {

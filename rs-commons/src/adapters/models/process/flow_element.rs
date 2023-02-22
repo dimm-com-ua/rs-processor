@@ -55,7 +55,7 @@ impl FlowElement {
 
     pub async fn validate(&self, args_to_process: Option<HashMap<String, Value>>, dbs: &DbServices, tr: &Transaction<'_>, app: &App) -> Result<(), ErrorDefinition> {
         match self.get_all_arguments(dbs, &tr).await {
-            Ok(args) => {;
+            Ok(args) => {
                 let agrs_not_found: Vec<&FlowElementArgument> = args.iter().filter(|a| {
                     if a.direction == ArgumentDirection::In && a.is_required {
                         return if let Some(arg) = &args_to_process {

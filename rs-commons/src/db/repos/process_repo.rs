@@ -1,7 +1,5 @@
-use deadpool_postgres::tokio_postgres::{Error, Row};
 use deadpool_postgres::Transaction;
 use postgres_types::ToSql;
-use crate::adapters::db::client::PgClient;
 use crate::adapters::models::handlers::HandlerType;
 use crate::adapters::models::process::{flow_element::FlowElement, process_flow::ProcessFlow};
 use crate::adapters::models::process::flow_route::FlowRoute;

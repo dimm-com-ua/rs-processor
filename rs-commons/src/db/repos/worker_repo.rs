@@ -1,10 +1,8 @@
 use chrono::{DateTime, Utc};
 use deadpool_postgres::Transaction;
 use serde_json::json;
-use uuid::uuid;
 use crate::adapters::db::client::PgClient;
 use crate::adapters::models::common_error::ErrorDefinition;
-use crate::db::models::process_db::FlowElementDb;
 use crate::db::models::task_worker_db::TaskWorkerDb;
 
 #[derive(Clone)]

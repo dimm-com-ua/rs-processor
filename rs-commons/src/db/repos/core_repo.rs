@@ -1,4 +1,3 @@
-use deadpool_postgres::tokio_postgres::{Error, Row};
 use deadpool_postgres::Transaction;
 use serde_json::json;
 use crate::adapters::models::common_error::ErrorDefinition;

@@ -1,8 +1,11 @@
 use std::sync::Arc;
+
 use log::{error, info};
+
 use rs_commons::adapters::models::common_error::ErrorDefinition;
-use rs_commons::adapters::models::worker::task_worker::{TaskWorker, WorkerWhat};
+use rs_commons::adapters::models::worker::task_worker::WorkerWhat;
 use rs_commons::db::services::worker_db_service::WorkerDbService;
+
 use crate::app::app_service::AppService;
 
 pub struct WorkerService {
