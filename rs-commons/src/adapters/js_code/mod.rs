@@ -1,7 +1,6 @@
 use crate::adapters::models::common_error::ErrorDefinition;
 use crate::adapters::models::worker::task_worker::TaskWorker;
 use crate::db::services::DbServices;
-use chrono::{DateTime, NaiveDate};
 use deadpool_postgres::Transaction;
 use rhai::{Engine, Scope};
 use serde_json::json;
@@ -27,34 +26,9 @@ impl JsCodeService {
         match dbs.tasks.get_task_variables(task_id, None, tr).await {
             Ok(vars) => {
                 for v in vars {
-                    match v.data_type.id.as_str() {
-                        "string" => scope.push(
-                            v.name.clone(),
-                            String::from(v.value.clone().as_str().unwrap()),
-                        ),
-                        "number" => scope.push(v.name.clone(), v.value.clone().as_f64().unwrap()),
-                        "date" => scope.push(
-                            v.name.clone(),
-                            NaiveDate::parse_from_str(
-                                v.value.clone().as_str().unwrap(),
-                                "%Y-%m-%d",
-                            ),
-                        ),
-                        "datetime" => scope.push(
-                            v.name.clone(),
-                            DateTime::parse_from_str(
-                                v.value.clone().as_str().unwrap(),
-                                "%Y-%m-%d %H:%M:%S %z",
-                            ),
-                        ),
-                        // "object" =>   scope.push(v.name.clone(), Value::from(v.value.clone().as_object().unwrap())),
-                        "bool" => scope.push(v.name.clone(), v.value.clone().as_bool().unwrap()),
-
-                        _ => scope.push(
-                            v.name.clone(),
-                            String::from(v.value.clone().as_str().unwrap()),
-                        ),
-                    };
+                    if let Some(val) = v.to_engine_value() {
+                        scope.push(v.name.clone(), val);
+                    }
                 }
             }
             Err(_) => {}
