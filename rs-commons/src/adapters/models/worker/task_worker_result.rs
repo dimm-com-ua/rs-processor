@@ -1,12 +1,16 @@
-use chrono::{DateTime, Utc};
 use crate::adapters::models::worker::task_variable::TaskVariable;
+use chrono::{DateTime, Utc};
 
-pub enum WorkerResult { Done, Fail, Finishing }
+pub enum WorkerResult {
+    Done,
+    Fail,
+    Finishing,
+}
 
 pub struct TaskWorkerResult {
     pub result: WorkerResult,
     pub wait_until: Option<DateTime<Utc>>,
-    pub out_args: Vec<TaskVariable>
+    pub out_args: Vec<TaskVariable>,
 }
 
 impl TaskWorkerResult {

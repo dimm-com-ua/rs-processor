@@ -10,7 +10,7 @@ pub struct Config {
     pub pg_database_use_tls: bool,
 
     pub app_port: u16,
-    pub app_host: String
+    pub app_host: String,
 }
 
 impl Config {

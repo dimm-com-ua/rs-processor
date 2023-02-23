@@ -1,13 +1,13 @@
+use crate::adapters::db::config::DbConfig;
+use deadpool_postgres::tokio_postgres::NoTls;
 use deadpool_postgres::{Client, Config, Pool, SslMode};
-use deadpool_postgres::tokio_postgres::{NoTls};
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use postgres_openssl::MakeTlsConnector;
-use crate::adapters::db::config::DbConfig;
 
 #[derive(Clone)]
 pub struct PgClient {
     pg_config: Config,
-    pg_pool: Option<Pool>
+    pg_pool: Option<Pool>,
 }
 
 impl PgClient {
@@ -23,7 +23,7 @@ impl PgClient {
 
         let mut pg_client = PgClient {
             pg_config: config,
-            pg_pool: None
+            pg_pool: None,
         };
 
         pg_client.pg_pool = Some(pg_client.create_pool());
@@ -32,12 +32,12 @@ impl PgClient {
 
     pub fn create_pool(&self) -> Pool {
         match self.pg_config.ssl_mode.unwrap() {
-            SslMode::Disable => {
-                match self.pg_config.create_pool(None, NoTls) {
-                    Ok(p) => p,
-                    Err(err) => { panic!("{}", err.to_string()) }
+            SslMode::Disable => match self.pg_config.create_pool(None, NoTls) {
+                Ok(p) => p,
+                Err(err) => {
+                    panic!("{}", err.to_string())
                 }
-            }
+            },
             _ => {
                 let mut builder = SslConnector::builder(SslMethod::tls()).unwrap();
                 builder.set_verify(SslVerifyMode::NONE);
@@ -45,7 +45,7 @@ impl PgClient {
 
                 match self.pg_config.create_pool(None, connector) {
                     Ok(p) => p,
-                    Err(err) => panic!("{}", err.to_string())
+                    Err(err) => panic!("{}", err.to_string()),
                 }
             }
         }
@@ -54,7 +54,10 @@ impl PgClient {
     pub async fn get_connection(&self) -> Client {
         match &self.pg_pool {
             None => panic!("Couldn't init connection pool!"),
-            Some(pool) => { pool.get().await.expect("Couldn't get connection from the pool!") }
+            Some(pool) => pool
+                .get()
+                .await
+                .expect("Couldn't get connection from the pool!"),
         }
     }
 }

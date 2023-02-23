@@ -4,13 +4,13 @@ pub mod task_engine_service;
 
 #[derive(Clone)]
 pub struct EngineServices {
-    pub task: TaskEngineService
+    pub task: TaskEngineService,
 }
 
 impl EngineServices {
     pub fn new() -> Self {
         EngineServices {
-            task: TaskEngineService::new()
+            task: TaskEngineService::new(),
         }
     }
 }

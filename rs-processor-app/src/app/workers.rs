@@ -1,9 +1,6 @@
-use std::sync::{Arc};
+use std::sync::Arc;
 
-use log::{error, info};
-use rhai::Engine;
-use tokio::sync::Mutex;
-use rs_commons::adapters::js_code::JsCodeService;
+use log::error;
 
 use rs_commons::adapters::models::common_error::ErrorDefinition;
 use rs_commons::adapters::models::worker::task_worker::WorkerWhat;
@@ -12,49 +9,53 @@ use rs_commons::db::services::worker_db_service::WorkerDbService;
 use crate::app::app_service::AppService;
 
 pub struct WorkerService {
-    db_service: WorkerDbService
+    db_service: WorkerDbService,
 }
 
 impl WorkerService {
     pub fn new() -> Self {
         WorkerService {
-            db_service: WorkerDbService::new()
+            db_service: WorkerDbService::new(),
         }
     }
 
-    pub async fn process_workers(&self, app: Arc<AppService>, engine: Arc<Mutex<Engine>>) -> Result<(), ErrorDefinition> {
-        match app.db_service.worker.fetch_workers(10, &app.db_client).await {
+    pub async fn process_workers(&self, app: Arc<AppService>) -> Result<(), ErrorDefinition> {
+        match app
+            .db_service
+            .worker
+            .fetch_workers(10, &app.db_client)
+            .await
+        {
             Ok(workers) => {
                 for w in workers {
                     let app = app.clone();
                     let db_client = app.db_client.clone();
                     let dbs = app.db_service.clone();
                     let db_service = self.db_service.clone();
-                    let engine = engine.clone();
                     match w.what {
-                        WorkerWhat::Process  => {
+                        WorkerWhat::Process => {
                             actix_web::rt::spawn(async move {
-                                if let Err(err) = db_service.process(w, &db_client, &dbs, &app.app).await {
+                                if let Err(err) =
+                                    db_service.process(w, &db_client, &dbs, &app.app).await
+                                {
                                     error!("{:?}", err);
                                 }
                             });
-                        },
+                        }
                         WorkerWhat::RouteAfter => {
-                            if let Err(err) = db_service.route_after(
-                                w,
-                                &db_client,
-                                &dbs,
-                                &app.app,
-                                engine
-                            ).await {
-                                error!("{:?}", err);
-                            }
+                            actix_web::rt::spawn(async move {
+                                if let Err(err) =
+                                    db_service.route_after(w, &db_client, &dbs, &app.app).await
+                                {
+                                    error!("{:?}", err);
+                                }
+                            });
                         }
                     }
                 }
                 Ok(())
             }
-            Err(err) => { Err(err) }
+            Err(err) => Err(err),
         }
     }
 }

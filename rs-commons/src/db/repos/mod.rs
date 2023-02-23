@@ -7,5 +7,5 @@ pub mod worker_repo;
 #[derive(Debug)]
 pub enum DbRepoError {
     NotFound,
-    QueryError(String)
+    QueryError(String),
 }

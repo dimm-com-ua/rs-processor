@@ -1,18 +1,18 @@
-use derive_more::{Display};
-use serde_json::{json, Value};
 use crate::db::services::DbServiceError;
+use derive_more::Display;
+use serde_json::{json, Value};
 
 #[derive(Display, Debug)]
-#[display(fmt="({}, {}, {}", description, value, reason)]
+#[display(fmt = "({}, {}, {}", description, value, reason)]
 pub struct ErrorDefinition {
     pub description: String,
-    #[display(fmt="{:?}", location)]
+    #[display(fmt = "{:?}", location)]
     pub location: Option<String>,
     pub value: Value,
-    pub reason: Value
+    pub reason: Value,
 }
 
-impl ErrorDefinition{
+impl ErrorDefinition {
     pub fn new(description: String, location: String, value: Value) -> Self {
         ErrorDefinition {
             description,
@@ -48,11 +48,9 @@ impl ErrorDefinition{
 
     pub fn from_db(err: &DbServiceError) -> Self {
         match err {
-            DbServiceError::NotFound => {
-                ErrorDefinition::empty("Not found".to_string())
-            }
+            DbServiceError::NotFound => ErrorDefinition::empty("Not found".to_string()),
             DbServiceError::QueryError(err) => {
-                ErrorDefinition::with_reason("DbService error".to_string(), json!({"error": err}))
+                ErrorDefinition::with_reason("DbService error".to_string(), json!({ "error": err }))
             }
         }
     }

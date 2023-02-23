@@ -1,7 +1,6 @@
 use rs_commons::adapters::db::client::PgClient;
 use rs_commons::adapters::db::config::DbConfiguration;
 use rs_commons::adapters::db::db_migrations::run_migrations;
-use rs_commons::adapters::js_code::JsCodeService;
 use rs_commons::adapters::models::common_error::ErrorDefinition;
 use rs_commons::adapters::task_engine::EngineServices;
 use rs_commons::config::config::Config;
@@ -12,7 +11,7 @@ pub struct AppService {
     pub db_client: PgClient,
     pub db_service: DbServices,
     pub engine_service: EngineServices,
-    pub app: App
+    pub app: App,
 }
 
 impl AppService {
@@ -21,7 +20,7 @@ impl AppService {
             db_client: PgClient::new(app_config.get_db_config()),
             db_service: DbServices::new(),
             engine_service: EngineServices::new(),
-            app: App::new()
+            app: App::new(),
         })
     }
 

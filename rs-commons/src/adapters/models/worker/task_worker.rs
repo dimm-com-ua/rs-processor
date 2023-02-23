@@ -1,19 +1,19 @@
+use crate::db::models::task_worker_db::TaskWorkerDb;
 use chrono::{DateTime, Utc};
 use derive_more::Display;
-use crate::db::models::task_worker_db::TaskWorkerDb;
 
 pub struct TaskWorker {
     pub id: uuid::Uuid,
     pub task_id: uuid::Uuid,
     pub created_at: DateTime<Utc>,
     pub element_id: uuid::Uuid,
-    pub what: WorkerWhat
+    pub what: WorkerWhat,
 }
 
 #[derive(Display)]
 pub enum WorkerWhat {
     Process,
-    RouteAfter
+    RouteAfter,
 }
 
 impl TaskWorker {
@@ -26,7 +26,7 @@ impl TaskWorker {
             what: match model.what.clone().unwrap_or("process".to_string()).as_str() {
                 "process" => WorkerWhat::Process,
                 "route_after" => WorkerWhat::RouteAfter,
-                _ => WorkerWhat::Process
+                _ => WorkerWhat::Process,
             },
         }
     }

@@ -1,10 +1,12 @@
-use serde_json::Value;
 use crate::adapters::data_types::DataTypeTrait;
+use serde_json::Value;
 
 pub struct ObjectDataType;
 
 impl ObjectDataType {
-    pub fn new() -> Self { ObjectDataType{} }
+    pub fn new() -> Self {
+        ObjectDataType {}
+    }
 }
 
 impl DataTypeTrait for ObjectDataType {

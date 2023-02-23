@@ -8,28 +8,36 @@ use crate::db::services::{App, DbServices};
 use async_trait::async_trait;
 use deadpool_postgres::Transaction;
 
-pub struct FinishHandler;
+pub struct ScriptHandler;
 
-impl FinishHandler {
+impl ScriptHandler {
     pub fn new() -> Self {
-        FinishHandler {}
+        ScriptHandler {}
     }
 }
 
 #[async_trait]
-impl TaskHandlerTrait for FinishHandler {
+impl TaskHandlerTrait for ScriptHandler {
     async fn process(
         &self,
         task_worker: TaskWorker,
-        _flow_element: &FlowElement,
+        flow_element: &FlowElement,
         dbs: &DbServices,
-        _app: &App,
+        app: &App,
         _args: Option<Vec<TaskVariable>>,
         tr: &Transaction<'_>,
     ) -> Result<TaskWorkerResult, ErrorDefinition> {
-        match dbs.tasks.clear_task(task_worker.task_id.clone(), tr).await {
-            Ok(_) => Ok(TaskWorkerResult::finish()),
-            Err(err) => Err(err),
+        if let Some(script) = flow_element.handler_value.get("script") {
+            let _ = app
+                .js_code()
+                .evaluate_from_flow_element(script.as_str().unwrap(), &task_worker, dbs, tr)
+                .await;
+
+            Ok(TaskWorkerResult::ok())
+        } else {
+            Err(ErrorDefinition::empty(
+                "Flow element does not contains script as property".to_string(),
+            ))
         }
     }
 }

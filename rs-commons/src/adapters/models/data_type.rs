@@ -4,7 +4,7 @@ use crate::db::models::data_type_db::DataTypeDb;
 pub struct DataType {
     pub id: String,
     pub name: String,
-    pub handler: String
+    pub handler: String,
 }
 
 impl DataType {
@@ -12,7 +12,7 @@ impl DataType {
         DataType {
             id: db_model.id.clone(),
             name: db_model.name.clone(),
-            handler: db_model.handler.clone()
+            handler: db_model.handler.clone(),
         }
     }
 }

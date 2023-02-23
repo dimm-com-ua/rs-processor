@@ -1,5 +1,5 @@
-use deadpool_postgres::SslMode;
 use crate::config::config::Config;
+use deadpool_postgres::SslMode;
 
 pub struct DbConfig {
     pub db_path: String,
@@ -7,7 +7,7 @@ pub struct DbConfig {
     pub db_username: String,
     pub db_password: String,
     pub db_database: String,
-    pub db_ssl_mode: SslMode
+    pub db_ssl_mode: SslMode,
 }
 
 pub trait DbConfiguration {
@@ -23,9 +23,9 @@ impl DbConfiguration for Config {
             db_password: self.pg_password.clone(),
             db_database: self.pg_database.clone(),
             db_ssl_mode: match self.pg_database_use_tls {
-                true => { SslMode::Require }
-                false => { SslMode::Disable }
-            }
+                true => SslMode::Require,
+                false => SslMode::Disable,
+            },
         }
     }
 }

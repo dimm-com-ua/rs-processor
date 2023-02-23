@@ -2,13 +2,10 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::time::Duration;
 
-use actix_web::{App, HttpServer, web};
 use actix_web::middleware::Logger;
 use actix_web::rt::time;
+use actix_web::{web, App, HttpServer};
 use log::info;
-use rhai::Engine;
-use tokio::sync::{Mutex, MutexGuard, RwLock};
-use tokio::task;
 
 use rs_commons::config::config::Config;
 
@@ -22,15 +19,17 @@ mod app;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let app_config = Config::make_from_env();
-    let app_service = Arc::new(AppService::new(&app_config)
-        .await
-        .map_err(|err| {
-            Error::new(
-                ErrorKind::Other,
-                format!("Couldn't start app_service! Error: {:?}", err),
-            )
-        })
-        .unwrap());
+    let app_service = Arc::new(
+        AppService::new(&app_config)
+            .await
+            .map_err(|err| {
+                Error::new(
+                    ErrorKind::Other,
+                    format!("Couldn't start app_service! Error: {:?}", err),
+                )
+            })
+            .unwrap(),
+    );
 
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
@@ -41,14 +40,17 @@ async fn main() -> std::io::Result<()> {
 
     let app_arc_worker = app_service.clone();
 
-    let engine = Arc::new(Mutex::new(Engine::new()));
-    let engine_clone = engine.clone();
-
     actix_web::rt::spawn(async move {
-        let _ = prepare_schedule(app_arc_worker, engine).await.expect("Failed to create schedule");
+        let _ = prepare_schedule(app_arc_worker)
+            .await
+            .expect("Failed to create schedule");
     });
 
-    info!("starting HTTP server at http://{}:{}", (&app_config).app_host, (&app_config).app_port);
+    info!(
+        "starting HTTP server at http://{}:{}",
+        (&app_config).app_host,
+        (&app_config).app_port
+    );
 
     HttpServer::new(move || {
         App::new()
@@ -62,7 +64,7 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-async fn prepare_schedule(app: Arc<AppService>, engine: Arc<Mutex<Engine>>) -> Result<(), String> {
+async fn prepare_schedule(app: Arc<AppService>) -> Result<(), String> {
     info!("Creating scheduler");
     let worker = WorkerService::new();
     let worker = Arc::new(worker);
@@ -71,10 +73,9 @@ async fn prepare_schedule(app: Arc<AppService>, engine: Arc<Mutex<Engine>>) -> R
     loop {
         interval.tick().await;
         let app = app.clone();
-        let worker= worker.clone();
-        let engine_clone = engine.clone();
+        let worker = worker.clone();
         actix_web::rt::spawn(async move {
-            if let Err(err) = worker.process_workers(app, engine_clone).await {
+            if let Err(err) = worker.process_workers(app).await {
                 info!("{:?}", err);
             }
         });

@@ -5,5 +5,5 @@ use crate::db::models::process_db::FlowRouteDb;
 pub struct FlowRoute {
     pub model: FlowRouteDb,
     pub out_flow_element: Option<FlowElement>,
-    pub in_flow_element: Option<FlowElement>
+    pub in_flow_element: Option<FlowElement>,
 }
