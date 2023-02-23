@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use crate::adapters::data_types::{DataTypes, DataTypeTrait};
+use crate::adapters::js_code::JsCodeService;
 use crate::adapters::task_handlers::{TaskHandlers, TaskHandlerTrait};
 use crate::db::services::core_db_service::CoreDbService;
 use crate::db::services::flow_db_service::FlowDbService;
@@ -44,7 +45,8 @@ impl DbServices {
 #[derive(Clone)]
 pub struct App {
     data_types: DataTypes,
-    handlers: TaskHandlers
+    handlers: TaskHandlers,
+    js_code: JsCodeService
 }
 
 pub enum AppError { DataTypeNotFound }
@@ -57,7 +59,8 @@ impl App {
         handlers.init();
         App {
             data_types: dt,
-            handlers
+            handlers,
+            js_code: JsCodeService::new(),
         }
     }
 

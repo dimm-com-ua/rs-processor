@@ -1,14 +1,20 @@
-use crate::api::api::config;
-use crate::app::app_service::AppService;
-use actix_web::middleware::Logger;
-use actix_web::{web, App, HttpServer};
-use rs_commons::config::config::Config;
 use std::io::{Error, ErrorKind};
-use std::sync::{Arc};
+use std::sync::Arc;
 use std::time::Duration;
+
+use actix_web::{App, HttpServer, web};
+use actix_web::middleware::Logger;
 use actix_web::rt::time;
 use log::info;
-use crate::app::workers::{WorkerService};
+use rhai::Engine;
+use tokio::sync::{Mutex, MutexGuard, RwLock};
+use tokio::task;
+
+use rs_commons::config::config::Config;
+
+use crate::api::api::config;
+use crate::app::app_service::AppService;
+use crate::app::workers::WorkerService;
 
 mod api;
 mod app;
@@ -35,8 +41,11 @@ async fn main() -> std::io::Result<()> {
 
     let app_arc_worker = app_service.clone();
 
-    actix_web::rt::spawn(async move{
-        let _ = prepare_schedule(app_arc_worker).await.expect("Failed to create schedule");
+    let engine = Arc::new(Mutex::new(Engine::new()));
+    let engine_clone = engine.clone();
+
+    actix_web::rt::spawn(async move {
+        let _ = prepare_schedule(app_arc_worker, engine).await.expect("Failed to create schedule");
     });
 
     info!("starting HTTP server at http://{}:{}", (&app_config).app_host, (&app_config).app_port);
@@ -53,7 +62,7 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-async fn prepare_schedule(app: Arc<AppService>) -> Result<(), String> {
+async fn prepare_schedule(app: Arc<AppService>, engine: Arc<Mutex<Engine>>) -> Result<(), String> {
     info!("Creating scheduler");
     let worker = WorkerService::new();
     let worker = Arc::new(worker);
@@ -63,8 +72,9 @@ async fn prepare_schedule(app: Arc<AppService>) -> Result<(), String> {
         interval.tick().await;
         let app = app.clone();
         let worker= worker.clone();
-        tokio::spawn(async move {
-            if let Err(err) = worker.process_workers(app).await {
+        let engine_clone = engine.clone();
+        actix_web::rt::spawn(async move {
+            if let Err(err) = worker.process_workers(app, engine_clone).await {
                 info!("{:?}", err);
             }
         });

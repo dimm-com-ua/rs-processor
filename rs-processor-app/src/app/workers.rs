@@ -1,6 +1,9 @@
-use std::sync::Arc;
+use std::sync::{Arc};
 
 use log::{error, info};
+use rhai::Engine;
+use tokio::sync::Mutex;
+use rs_commons::adapters::js_code::JsCodeService;
 
 use rs_commons::adapters::models::common_error::ErrorDefinition;
 use rs_commons::adapters::models::worker::task_worker::WorkerWhat;
@@ -19,7 +22,7 @@ impl WorkerService {
         }
     }
 
-    pub async fn process_workers(&self, app: Arc<AppService>) -> Result<(), ErrorDefinition> {
+    pub async fn process_workers(&self, app: Arc<AppService>, engine: Arc<Mutex<Engine>>) -> Result<(), ErrorDefinition> {
         match app.db_service.worker.fetch_workers(10, &app.db_client).await {
             Ok(workers) => {
                 for w in workers {
@@ -27,19 +30,23 @@ impl WorkerService {
                     let db_client = app.db_client.clone();
                     let dbs = app.db_service.clone();
                     let db_service = self.db_service.clone();
-
-                    info!("Processing {} - {} - {}", w.task_id, w.element_id, w.what);
-
+                    let engine = engine.clone();
                     match w.what {
                         WorkerWhat::Process  => {
-                            tokio::spawn(async move {
+                            actix_web::rt::spawn(async move {
                                 if let Err(err) = db_service.process(w, &db_client, &dbs, &app.app).await {
                                     error!("{:?}", err);
                                 }
                             });
                         },
                         WorkerWhat::RouteAfter => {
-                            if let Err(err) = db_service.route_after(w, &db_client, &dbs, &app.app).await {
+                            if let Err(err) = db_service.route_after(
+                                w,
+                                &db_client,
+                                &dbs,
+                                &app.app,
+                                engine
+                            ).await {
                                 error!("{:?}", err);
                             }
                         }

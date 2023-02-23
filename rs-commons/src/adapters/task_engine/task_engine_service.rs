@@ -1,10 +1,10 @@
-use rs_commons::adapters::db::client::PgClient;
-use rs_commons::adapters::models::common_error::ErrorDefinition;
-use rs_commons::adapters::models::task::{CreateTask, TaskDefinition};
-use rs_commons::db::services::{App, DbServices};
 use chrono::Utc;
 use serde_json::{json};
-use rs_commons::adapters::models::worker::task_worker::WorkerWhat;
+use crate::adapters::db::client::PgClient;
+use crate::adapters::models::common_error::ErrorDefinition;
+use crate::adapters::models::task::{CreateTask, TaskDefinition};
+use crate::adapters::models::worker::task_worker::WorkerWhat;
+use crate::db::services::{App, DbServices};
 
 #[derive(Clone)]
 pub struct TaskEngineService;

@@ -1,10 +1,15 @@
+use std::sync::{Arc};
+use tokio::sync::Mutex;
 use chrono::{Duration, Utc};
 use log::info;
-use serde_json::json;
+use rhai::Engine;
+use serde_json::{json, Value};
 
 use crate::adapters::db::client::PgClient;
+use crate::adapters::js_code::JsCodeService;
 use crate::adapters::models::common_error::ErrorDefinition;
 use crate::adapters::models::process::flow_element::{ArgumentDirection};
+use crate::adapters::models::process::flow_route::FlowRoute;
 use crate::adapters::models::worker::task_worker::{TaskWorker, WorkerWhat};
 use crate::adapters::models::worker::task_worker_result::WorkerResult;
 use crate::db::repos::worker_repo::WorkerRepo;
@@ -121,7 +126,14 @@ impl WorkerDbService {
         }
     }
 
-    pub async fn route_after(&self, worker: TaskWorker, db_client: &PgClient, dbs: &DbServices, _app: &App) -> Result<(), ErrorDefinition> {
+    pub async fn
+    route_after(&self,
+                             worker: TaskWorker,
+                             db_client: &PgClient,
+                             dbs: &DbServices,
+                             app: &App,
+                             engine: Arc<Mutex<Engine>>
+    ) -> Result<(), ErrorDefinition> {
         match db_client.get_connection().await.build_transaction().start().await {
             Ok(tr) => {
                 match dbs.process.get_out_routes(
@@ -129,32 +141,69 @@ impl WorkerDbService {
                     &tr
                 ).await {
                     Ok(routes) => {
-                        if let Some(route) = routes.first() {
-                            if let Some(_is_conditional) = route.model.is_conditional {
-                                match dbs.tasks.create_worker(
-                                    worker.task_id.clone(),
-                                    route.in_flow_element.as_ref().unwrap().id.clone(),
-                                    WorkerWhat::Process,
-                                    Some(Utc::now()),
-                                    &tr
-                                ).await {
-                                    Ok(_) => {}
-                                    Err(err) => {
-                                        return Err(err);
+                        let mut route: Option<FlowRoute> = None;
+                        for rt in routes {
+                            if let Some(is_conditional) = rt.model.is_conditional {
+                                if is_conditional == false {
+                                    route = Some(rt);
+                                    break
+                                } else {
+                                    match rt.model.condition.clone() {
+                                        None => {}
+                                        Some(cond) => {
+                                            info!("{}", cond);
+                                            if let Some(cond) = cond.get("if") {
+                                                match app.js_code.evaluate_from_task::<bool>(
+                                                    worker.task_id.clone(),
+                                                    cond.as_str().unwrap().to_string(),
+                                                    dbs,
+                                                    &tr,
+                                                    engine.clone()
+                                                ).await {
+                                                    Ok(res) => {
+                                                        info!("res: {}", res);
+                                                        if res == true {
+                                                            route = Some(rt);
+                                                            break
+                                                        }
+                                                    }
+                                                    Err(err) => {
+                                                        return Err(ErrorDefinition::with_reason("Couldn't execute script".to_string(), json!({"error": format!("{:?}", err)})))
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
+                        }
+                        if let Some(route) = route {
+                            return match dbs.tasks.create_worker(
+                                worker.task_id.clone(),
+                                route.in_flow_element.as_ref().unwrap().id.clone(),
+                                WorkerWhat::Process,
+                                Some(Utc::now()),
+                                &tr
+                            ).await {
+                                Ok(_) => {
+                                    if let Err(err) = self.repo.delete(worker.id.clone(), &tr).await {
+                                        return Err(ErrorDefinition::with_reason("Couldn't deleting worker".to_string(), json!({"error": format!("{:?}", err)})))
+                                    }
+                                    let _ = tr.commit().await;
+                                    Ok(())
+                                }
+                                Err(err) => {
+                                    Err(err)
+                                }
+                            }
+                        }  else {
+                            Err(ErrorDefinition::empty("No route found to be run".to_string()))
                         }
                     }
                     Err(err) => {
                         return Err(ErrorDefinition::with_reason("Couldn't get out routes".to_string(), json!({"error": format!("{:?}", err)})))
                     }
                 }
-                if let Err(err) = self.repo.delete(worker.id.clone(), &tr).await {
-                    return Err(ErrorDefinition::with_reason("Couldn't deleting worker".to_string(), json!({"error": format!("{:?}", err)})))
-                }
-                let _ = tr.commit().await;
-                return Ok(());
             }
             Err(err) => {
                 Err(ErrorDefinition::with_reason("Couldn't create transaction".to_string(), json!({"error": format!("{:?}", err)})))

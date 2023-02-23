@@ -1,2 +1,2 @@
 [workspace]
-members=['rs-commons', 'rs-processor-app', 'rs-processor-engine']
+members=['rs-commons', 'rs-processor-app']

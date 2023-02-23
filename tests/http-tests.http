@@ -9,10 +9,11 @@ Content-Type: application/json
   "flow": "test",
   "arguments": {
     "order_id": "000001",
-    "product": "cache",
+    "product": "check+",
     "itn": "3000000000",
     "phone": "380505555555",
     "value": 12345,
-    "length": 12
+    "length": 12,
+    "decision": "rejected"
   }
 }

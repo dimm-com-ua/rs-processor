@@ -1,10 +1,11 @@
 use rs_commons::adapters::db::client::PgClient;
 use rs_commons::adapters::db::config::DbConfiguration;
 use rs_commons::adapters::db::db_migrations::run_migrations;
+use rs_commons::adapters::js_code::JsCodeService;
 use rs_commons::adapters::models::common_error::ErrorDefinition;
+use rs_commons::adapters::task_engine::EngineServices;
 use rs_commons::config::config::Config;
 use rs_commons::db::services::{App, DbServices};
-use rs_processor_engine::services::EngineServices;
 
 #[derive(Clone)]
 pub struct AppService {

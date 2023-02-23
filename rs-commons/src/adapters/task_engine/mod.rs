@@ -1,4 +1,4 @@
-use crate::services::task_engine_service::TaskEngineService;
+use crate::adapters::task_engine::task_engine_service::TaskEngineService;
 
 pub mod task_engine_service;
 
