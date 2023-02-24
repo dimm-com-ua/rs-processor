@@ -6,19 +6,23 @@ use actix_web::middleware::Logger;
 use actix_web::rt::time;
 use actix_web::{web, App, HttpServer};
 use log::info;
+use rs_commons::adapters::db::config::DbConfiguration;
+use rs_commons::adapters::models::common_error::ErrorDefinition;
+use app::queue_consumer::QueueConsumer;
+use rs_commons::adapters::queue_publisher::QueueConfig;
 
 use rs_commons::config::config::Config;
 
 use crate::api::api::config;
 use crate::app::app_service::AppService;
-use crate::app::workers::WorkerService;
+use crate::app::worker_service::WorkerService;
 
 mod api;
 mod app;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let app_config = Config::make_from_env();
+    let app_config = Arc::new(Config::make_from_env());
     let app_service = Arc::new(
         AppService::new(&app_config)
             .await
@@ -40,8 +44,9 @@ async fn main() -> std::io::Result<()> {
 
     let app_arc_worker = app_service.clone();
 
+    let app_config_clone = app_config.clone();
     actix_web::rt::spawn(async move {
-        let _ = prepare_schedule(app_arc_worker)
+        let _ = prepare_schedule(app_config_clone.get_queue_config().clone(), app_arc_worker)
             .await
             .expect("Failed to create schedule");
     });
@@ -64,20 +69,15 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-async fn prepare_schedule(app: Arc<AppService>) -> Result<(), String> {
+async fn prepare_schedule(config: QueueConfig, app: Arc<AppService>) -> Result<(), ErrorDefinition> {
     info!("Creating scheduler");
-    let worker = WorkerService::new();
-    let worker = Arc::new(worker);
-    let mut interval = time::interval(Duration::from_millis(1));
-
-    loop {
-        interval.tick().await;
-        let app = app.clone();
-        let worker = worker.clone();
-        actix_web::rt::spawn(async move {
-            if let Err(err) = worker.process_workers(app).await {
-                info!("{:?}", err);
-            }
-        });
+    let worker_service = WorkerService::new();
+    match QueueConsumer::new(config).await {
+        Ok(mut q_consumer) => {
+            q_consumer.run(&app).await
+        }
+        Err(err) => {
+            Err(err)
+        }
     }
 }

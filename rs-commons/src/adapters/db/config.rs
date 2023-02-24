@@ -1,6 +1,8 @@
 use crate::config::config::Config;
 use deadpool_postgres::SslMode;
+use crate::adapters::queue_publisher::QueueConfig;
 
+#[derive(Clone)]
 pub struct DbConfig {
     pub db_path: String,
     pub db_port: String,
@@ -12,6 +14,7 @@ pub struct DbConfig {
 
 pub trait DbConfiguration {
     fn get_db_config(&self) -> DbConfig;
+    fn get_queue_config(&self) -> QueueConfig;
 }
 
 impl DbConfiguration for Config {
@@ -26,6 +29,13 @@ impl DbConfiguration for Config {
                 true => SslMode::Require,
                 false => SslMode::Disable,
             },
+        }
+    }
+
+    fn get_queue_config(&self) -> QueueConfig {
+        QueueConfig {
+            amqp_path: self.queue_amqp_path.clone(),
+            queue_name: self.queue_exchange_name.clone(),
         }
     }
 }

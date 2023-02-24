@@ -8,6 +8,7 @@ use deadpool_postgres::Transaction;
 use serde_json::Value;
 use std::collections::HashMap;
 use uuid::Uuid;
+use crate::db::services::App;
 
 #[derive(Clone)]
 pub struct TasksDbService {
@@ -48,12 +49,27 @@ impl TasksDbService {
         element_id: Uuid,
         what: WorkerWhat,
         run_after: Option<DateTime<Utc>>,
+        app: &App,
         tr: &Transaction<'_>,
     ) -> Result<Uuid, ErrorDefinition> {
         let created_at = Utc::now();
-        self.repo
+        match self.repo
             .create_worker(task_id, element_id, what, created_at, run_after, tr)
-            .await
+            .await {
+            Ok(uuid) => {
+                match app.queue_pub.create_worker(uuid.clone()).await {
+                    Ok(_) => {
+                        Ok(uuid)
+                    }
+                    Err(err) => {
+                        Err(err)
+                    }
+                }
+            }
+            Err(err) => {
+                Err(err)
+            }
+        }
     }
 
     pub async fn get_task_variables(

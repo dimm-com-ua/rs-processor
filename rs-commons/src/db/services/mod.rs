@@ -8,6 +8,10 @@ use crate::db::services::task_db_service::TasksDbService;
 use crate::db::services::worker_db_service::WorkerDbService;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use crate::adapters::db::config::DbConfiguration;
+use crate::adapters::models::common_error::ErrorDefinition;
+use crate::adapters::queue_publisher::QueuePublisher;
+use crate::config::config::Config;
 
 pub mod core_db_service;
 pub mod flow_db_service;
@@ -47,6 +51,7 @@ pub struct App {
     data_types: DataTypes,
     handlers: TaskHandlers,
     js_code: JsCodeService,
+    queue_pub: QueuePublisher,
 }
 
 pub enum AppError {
@@ -54,15 +59,23 @@ pub enum AppError {
 }
 
 impl App {
-    pub fn new() -> Self {
-        let mut dt = DataTypes::new();
-        dt.init();
-        let mut handlers = TaskHandlers::new();
-        handlers.init();
-        App {
-            data_types: dt,
-            handlers,
-            js_code: JsCodeService::new(),
+    pub async fn new(config: &Config) -> Result<Self, ErrorDefinition> {
+        match QueuePublisher::new(config.get_queue_config()).await {
+            Ok(queue_pub) => {
+                let mut dt = DataTypes::new();
+                dt.init();
+                let mut handlers = TaskHandlers::new();
+                handlers.init();
+                Ok(App {
+                    data_types: dt,
+                    handlers,
+                    js_code: JsCodeService::new(),
+                    queue_pub,
+                })
+            }
+            Err(err) => {
+                Err(err)
+            }
         }
     }
 

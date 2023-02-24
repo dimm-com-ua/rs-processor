@@ -2,6 +2,7 @@ use crate::db::models::task_worker_db::TaskWorkerDb;
 use chrono::{DateTime, Utc};
 use derive_more::Display;
 
+#[derive(Debug)]
 pub struct TaskWorker {
     pub id: uuid::Uuid,
     pub task_id: uuid::Uuid,
@@ -10,7 +11,7 @@ pub struct TaskWorker {
     pub what: WorkerWhat,
 }
 
-#[derive(Display)]
+#[derive(Display, Debug)]
 pub enum WorkerWhat {
     Process,
     RouteAfter,

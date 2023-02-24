@@ -23,6 +23,17 @@ impl WorkerDbService {
         }
     }
 
+    pub async fn get_worker(
+        &self,
+        uuid: uuid::Uuid,
+        db: &PgClient
+    ) -> Result<TaskWorker, ErrorDefinition> {
+        self
+            .repo
+            .get_worker(uuid, db)
+            .await
+    }
+
     pub async fn fetch_workers(
         &self,
         count: i64,
@@ -142,6 +153,7 @@ impl WorkerDbService {
                                                     flow_element.id.clone(),
                                                     WorkerWhat::RouteAfter,
                                                     Some(now),
+                                                    app,
                                                     &tr,
                                                 )
                                                 .await;
@@ -254,6 +266,7 @@ impl WorkerDbService {
                                     route.in_flow_element.as_ref().unwrap().id.clone(),
                                     WorkerWhat::Process,
                                     Some(Utc::now()),
+                                    app,
                                     &tr,
                                 )
                                 .await

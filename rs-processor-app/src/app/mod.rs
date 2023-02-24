@@ -1,2 +1,3 @@
 pub mod app_service;
-pub mod workers;
+pub mod worker_service;
+pub mod queue_consumer;

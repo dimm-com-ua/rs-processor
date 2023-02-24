@@ -63,6 +63,7 @@ impl TaskEngineService {
                                         starting_element.id.clone(),
                                         WorkerWhat::Process,
                                         Some(now),
+                                        app,
                                         &tr,
                                     )
                                     .await

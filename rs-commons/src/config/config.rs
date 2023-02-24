@@ -11,6 +11,9 @@ pub struct Config {
 
     pub app_port: u16,
     pub app_host: String,
+
+    pub queue_amqp_path: String,
+    pub queue_exchange_name: String
 }
 
 impl Config {
