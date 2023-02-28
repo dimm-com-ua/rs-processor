@@ -1,11 +1,10 @@
 use crate::adapters::db::client::PgClient;
 use crate::adapters::models::common_error::ErrorDefinition;
+use crate::adapters::models::worker::task_worker::TaskWorker;
 use crate::db::models::task_worker_db::TaskWorkerDb;
 use chrono::{DateTime, Utc};
-use deadpool_postgres::tokio_postgres::Row;
 use deadpool_postgres::Transaction;
 use serde_json::json;
-use crate::adapters::models::worker::task_worker::TaskWorker;
 
 #[derive(Clone)]
 pub struct WorkerRepo;
@@ -60,20 +59,20 @@ impl WorkerRepo {
         };
     }
 
-    pub async fn get_worker(&self, uuid: uuid::Uuid, db: &PgClient) -> Result<TaskWorker, ErrorDefinition> {
+    pub async fn get_worker(
+        &self,
+        uuid: uuid::Uuid,
+        db: &PgClient,
+    ) -> Result<TaskWorker, ErrorDefinition> {
         let query = "select ptw from pc_task_worker ptw where id=$1;";
         return match db.get_connection().await.query(query, &[&uuid]).await {
-            Ok(rows) => {
-                match rows.first() {
-                    None => {
-                        Err(ErrorDefinition::empty("Worker not found".to_string()))
-                    }
-                    Some(row) => {
-                        let worker: TaskWorkerDb = row.get(0);
-                        Ok(TaskWorker::from_db(&worker))
-                    }
+            Ok(rows) => match rows.first() {
+                None => Err(ErrorDefinition::empty("Worker not found".to_string())),
+                Some(row) => {
+                    let worker: TaskWorkerDb = row.get(0);
+                    Ok(TaskWorker::from_db(&worker))
                 }
-            }
+            },
             Err(err) => Err(ErrorDefinition::with_reason(
                 "Couldn't fetch locked workers".to_string(),
                 json!({ "error": format!("{:?}", err) }),

@@ -1,7 +1,7 @@
-use std::fmt::Display;
 use crate::db::services::DbServiceError;
 use derive_more::Display;
 use serde_json::{json, Value};
+use std::fmt::Display;
 
 #[derive(Display, Debug)]
 #[display(fmt = "({}, {}, {}", description, value, reason)]
@@ -43,7 +43,7 @@ impl ErrorDefinition {
             description: description.to_string(),
             location: None,
             value: Default::default(),
-            reason: json!({"error": format!("{}", error)})
+            reason: json!({ "error": format!("{}", error) }),
         }
     }
     pub fn as_json(&self) -> Value {

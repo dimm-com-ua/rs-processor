@@ -1,6 +1,6 @@
+use crate::adapters::queue_publisher::QueueConfig;
 use crate::config::config::Config;
 use deadpool_postgres::SslMode;
-use crate::adapters::queue_publisher::QueueConfig;
 
 #[derive(Clone)]
 pub struct DbConfig {

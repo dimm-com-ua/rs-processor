@@ -2,7 +2,6 @@ use rs_commons::adapters::db::client::PgClient;
 use rs_commons::adapters::db::config::DbConfiguration;
 use rs_commons::adapters::db::db_migrations::run_migrations;
 use rs_commons::adapters::models::common_error::ErrorDefinition;
-use rs_commons::adapters::queue_publisher::QueuePublisher;
 use rs_commons::adapters::task_engine::EngineServices;
 use rs_commons::config::config::Config;
 use rs_commons::db::services::{App, DbServices};
@@ -18,15 +17,13 @@ pub struct AppService {
 impl AppService {
     pub async fn new(app_config: &Config) -> Result<Self, ErrorDefinition> {
         match App::new(app_config).await {
-            Ok(app) => {
-                Ok(AppService {
-                    db_client: PgClient::new(app_config.get_db_config()),
-                    db_service: DbServices::new(),
-                    engine_service: EngineServices::new(),
-                    app,
-                })
-            }
-            Err(err) => { Err(err) }
+            Ok(app) => Ok(AppService {
+                db_client: PgClient::new(app_config.get_db_config()),
+                db_service: DbServices::new(),
+                engine_service: EngineServices::new(),
+                app,
+            }),
+            Err(err) => Err(err),
         }
     }
 

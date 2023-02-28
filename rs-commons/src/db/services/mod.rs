@@ -1,6 +1,10 @@
 use crate::adapters::data_types::{DataTypeTrait, DataTypes};
+use crate::adapters::db::config::DbConfiguration;
 use crate::adapters::js_code::JsCodeService;
+use crate::adapters::models::common_error::ErrorDefinition;
+use crate::adapters::queue_publisher::QueuePublisher;
 use crate::adapters::task_handlers::{TaskHandlerTrait, TaskHandlers};
+use crate::config::config::Config;
 use crate::db::services::core_db_service::CoreDbService;
 use crate::db::services::flow_db_service::FlowDbService;
 use crate::db::services::process_db_service::ProcessDbService;
@@ -8,10 +12,6 @@ use crate::db::services::task_db_service::TasksDbService;
 use crate::db::services::worker_db_service::WorkerDbService;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::adapters::db::config::DbConfiguration;
-use crate::adapters::models::common_error::ErrorDefinition;
-use crate::adapters::queue_publisher::QueuePublisher;
-use crate::config::config::Config;
 
 pub mod core_db_service;
 pub mod flow_db_service;
@@ -73,9 +73,7 @@ impl App {
                     queue_pub,
                 })
             }
-            Err(err) => {
-                Err(err)
-            }
+            Err(err) => Err(err),
         }
     }
 

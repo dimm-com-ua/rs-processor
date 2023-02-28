@@ -11,8 +11,7 @@ Content-Type: application/json
     "product": "check+",
     "itn": "3000000000",
     "phone": "380505555555",
-    "value": 12345,
-    "length": 12,
-    "decision": "rejected"
+    "value": 120.00,
+    "length": 12
   }
 }

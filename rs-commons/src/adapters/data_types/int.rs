@@ -1,17 +1,17 @@
 use crate::adapters::data_types::DataTypeTrait;
 use serde_json::Value;
 
-pub struct NumberDataType;
+pub struct IntDataType;
 
-impl NumberDataType {
+impl IntDataType {
     pub fn new() -> Self {
-        NumberDataType {}
+        IntDataType {}
     }
 }
 
-impl DataTypeTrait for NumberDataType {
+impl DataTypeTrait for IntDataType {
     fn validate(&self, value: &Value) -> Result<(), ()> {
-        if value.is_number() {
+        if value.is_i64() {
             Ok(())
         } else {
             Err(())

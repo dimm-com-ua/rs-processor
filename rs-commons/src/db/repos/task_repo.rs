@@ -10,7 +10,6 @@ use deadpool_postgres::Transaction;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use uuid::Uuid;
-use crate::db::services::App;
 
 #[derive(Clone)]
 pub struct TasksDbRepo;

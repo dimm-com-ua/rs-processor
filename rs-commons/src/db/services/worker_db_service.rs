@@ -26,12 +26,9 @@ impl WorkerDbService {
     pub async fn get_worker(
         &self,
         uuid: uuid::Uuid,
-        db: &PgClient
+        db: &PgClient,
     ) -> Result<TaskWorker, ErrorDefinition> {
-        self
-            .repo
-            .get_worker(uuid, db)
-            .await
+        self.repo.get_worker(uuid, db).await
     }
 
     pub async fn fetch_workers(

@@ -3,12 +3,12 @@ use crate::adapters::models::process::flow_element::FlowElementArgument;
 use crate::adapters::models::worker::task_variable::TaskVariable;
 use crate::adapters::models::worker::task_worker::WorkerWhat;
 use crate::db::repos::task_repo::TasksDbRepo;
+use crate::db::services::App;
 use chrono::{DateTime, Utc};
 use deadpool_postgres::Transaction;
 use serde_json::Value;
 use std::collections::HashMap;
 use uuid::Uuid;
-use crate::db::services::App;
 
 #[derive(Clone)]
 pub struct TasksDbService {
@@ -53,22 +53,16 @@ impl TasksDbService {
         tr: &Transaction<'_>,
     ) -> Result<Uuid, ErrorDefinition> {
         let created_at = Utc::now();
-        match self.repo
+        match self
+            .repo
             .create_worker(task_id, element_id, what, created_at, run_after, tr)
-            .await {
-            Ok(uuid) => {
-                match app.queue_pub.create_worker(uuid.clone()).await {
-                    Ok(_) => {
-                        Ok(uuid)
-                    }
-                    Err(err) => {
-                        Err(err)
-                    }
-                }
-            }
-            Err(err) => {
-                Err(err)
-            }
+            .await
+        {
+            Ok(uuid) => match app.queue_pub.create_worker(uuid.clone()).await {
+                Ok(_) => Ok(uuid),
+                Err(err) => Err(err),
+            },
+            Err(err) => Err(err),
         }
     }
 

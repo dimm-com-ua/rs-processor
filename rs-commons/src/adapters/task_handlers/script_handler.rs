@@ -7,6 +7,8 @@ use crate::adapters::task_handlers::TaskHandlerTrait;
 use crate::db::services::{App, DbServices};
 use async_trait::async_trait;
 use deadpool_postgres::Transaction;
+use std::sync::Arc;
+use log::info;
 
 pub struct ScriptHandler;
 
@@ -28,12 +30,23 @@ impl TaskHandlerTrait for ScriptHandler {
         tr: &Transaction<'_>,
     ) -> Result<TaskWorkerResult, ErrorDefinition> {
         if let Some(script) = flow_element.handler_value.get("script") {
-            let _ = app
+            return match app
                 .js_code()
-                .evaluate_from_flow_element(script.as_str().unwrap(), &task_worker, dbs, tr)
-                .await;
-
-            Ok(TaskWorkerResult::ok())
+                .evaluate_from_flow_element(
+                    script.as_str().unwrap(),
+                    &task_worker,
+                    Arc::new(dbs),
+                    Arc::new(tr),
+                )
+                .await {
+                Ok(vars) => {
+                    Ok(TaskWorkerResult::ok_with_args(vars))
+                }
+                Err(err) => {
+                    info!("{:?}", err);
+                    Err(err)
+                }
+            };
         } else {
             Err(ErrorDefinition::empty(
                 "Flow element does not contains script as property".to_string(),

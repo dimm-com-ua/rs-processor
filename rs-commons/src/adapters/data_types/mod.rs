@@ -1,4 +1,5 @@
-use crate::adapters::data_types::number::NumberDataType;
+use crate::adapters::data_types::float::FloatDataType;
+use crate::adapters::data_types::int::IntDataType;
 use crate::adapters::data_types::object::ObjectDataType;
 use crate::adapters::data_types::string::StringDataType;
 use serde_json::Value;
@@ -11,7 +12,8 @@ pub trait DataTypeTrait {
 
 pub mod date;
 pub mod datetime;
-pub mod number;
+pub mod float;
+pub mod int;
 pub mod object;
 pub mod string;
 
@@ -32,7 +34,9 @@ impl DataTypes {
         self.h
             .insert("string".to_string(), Arc::new(StringDataType::new()));
         self.h
-            .insert("number".to_string(), Arc::new(NumberDataType::new()));
+            .insert("int".to_string(), Arc::new(IntDataType::new()));
+        self.h
+            .insert("float".to_string(), Arc::new(FloatDataType::new()));
         self.h
             .insert("object".to_string(), Arc::new(ObjectDataType::new()));
     }

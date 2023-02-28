@@ -1,21 +1,18 @@
 use std::io::{Error, ErrorKind};
 use std::sync::Arc;
-use std::time::Duration;
 
 use actix_web::middleware::Logger;
-use actix_web::rt::time;
 use actix_web::{web, App, HttpServer};
+use app::queue_consumer::QueueConsumer;
 use log::info;
 use rs_commons::adapters::db::config::DbConfiguration;
 use rs_commons::adapters::models::common_error::ErrorDefinition;
-use app::queue_consumer::QueueConsumer;
 use rs_commons::adapters::queue_publisher::QueueConfig;
 
 use rs_commons::config::config::Config;
 
 use crate::api::api::config;
 use crate::app::app_service::AppService;
-use crate::app::worker_service::WorkerService;
 
 mod api;
 mod app;
@@ -69,15 +66,13 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-async fn prepare_schedule(config: QueueConfig, app: Arc<AppService>) -> Result<(), ErrorDefinition> {
+async fn prepare_schedule(
+    config: QueueConfig,
+    app: Arc<AppService>,
+) -> Result<(), ErrorDefinition> {
     info!("Creating scheduler");
-    let worker_service = WorkerService::new();
     match QueueConsumer::new(config).await {
-        Ok(mut q_consumer) => {
-            q_consumer.run(&app).await
-        }
-        Err(err) => {
-            Err(err)
-        }
+        Ok(mut q_consumer) => q_consumer.run(&app).await,
+        Err(err) => Err(err),
     }
 }
